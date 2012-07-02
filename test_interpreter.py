@@ -20,6 +20,15 @@ class test_interpreter(TestCase):
         result = inter.eval('func')
         self.assertEquals(func, result)
 
+    def test_eval_combination(self):
+        inter = Interpreter(namespace={'func': func, 'var': 123})
+        result = inter.eval(['func', 'var', '456'])
+        self.assertEquals(579, result)
+
+    def test_eval_nested_combination(self):
+        inter = Interpreter(namespace={'func': func, 'var': 123})
+        result = inter.eval(['func', 'var', ['func', '1', '2']])
+        self.assertEquals(126, result)
 
 if __name__ == '__main__':
     main()
