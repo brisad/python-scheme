@@ -15,34 +15,24 @@ class Parser(object):
                 break
             result.append(field)
         else:
-            raise ParseError("Expected ')'")
+            raise ParseError("Expected: ')'")
 
         return result
 
     def parse(self, string):
 
-        if not string:
-            return None
-
         fields = iter(re.findall(r'\(|\)|\b[^\W]+\b|\+|\-|\/|\*', string))
 
-        # Check for a primitive expression
-        first = fields.next()
-        if first != '(':
-            # Not a combination
-            return first
+        for first in fields:
+            if first == ')':
+                raise ParseError("Unexpected: ')'")
+            elif first == '(':
 
-        result = self._recurse(fields)
+                result = self._recurse(fields)
+                if not result:
+                    continue
+            else: # Not '(', ')'
+                # Not a combination, yield primitive expression
+                result = first
 
-        try:
-            trailing = fields.next()
-        except StopIteration:
-            pass
-        else:
-            if trailing != '(':
-                raise ParseError('Trailing data: %s' % trailing)
-
-        if not result:
-            return None
-
-        return result
+            yield result
