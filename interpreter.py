@@ -1,6 +1,7 @@
 class Interpreter(object):
-    def __init__(self, namespace={}):
+    def __init__(self, namespace={}, special_forms={}):
         self.namespace = namespace
+        self.special_forms = special_forms
 
     def eval(self, expression):
 
@@ -11,6 +12,9 @@ class Interpreter(object):
                 result = self.namespace.get(expression)
             return result
 
+        elif expression[0] in self.special_forms:
+            f = self.special_forms[expression[0]]
+            return f(expression[1:])
         else:
             # 1. Evaluate the subexpressions of the combination
             l = [self.eval(subexpr) for subexpr in expression]

@@ -4,6 +4,9 @@ from interpreter import Interpreter
 def func(a, b):
     return a + b
 
+def func2(x):
+    return x[0]
+
 class test_interpreter(TestCase):
     def test_eval_numerical_primitive(self):
         inter = Interpreter()
@@ -29,6 +32,11 @@ class test_interpreter(TestCase):
         inter = Interpreter(namespace={'func': func, 'var': 123})
         result = inter.eval(['func', 'var', ['func', '1', '2']])
         self.assertEquals(126, result)
+
+    def test_eval_special_form(self):
+        inter = Interpreter(special_forms={'func': func2})
+        result = inter.eval(['func', 'var'])
+        self.assertEquals('var', result)
 
 if __name__ == '__main__':
     main()
