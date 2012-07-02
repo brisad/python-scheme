@@ -24,9 +24,13 @@ class Parser(object):
         if not string:
             return None
 
-        string = string[1:]
-
         fields = iter(re.findall(r'\(|\)|\b[^\W]+\b|\+|\-|\/|\*', string))
+
+        # Check for a primitive expression
+        first = fields.next()
+        if first != '(':
+            # Not a combination
+            return first
 
         result = self._recurse(fields)
 

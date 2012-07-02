@@ -31,6 +31,9 @@ class test_parser(TestCase):
     def test_parser_unmatched_parantheses_throws_error2(self):
         self.assertRaises(ParseError, self.p.parse, '(a ( b)')
 
+    def test_parser_primitive_expression(self):
+        self.assert_parse_results('123', '123')
+
 
 if __name__ == '__main__':
     main()
