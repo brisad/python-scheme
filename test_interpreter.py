@@ -1,42 +1,43 @@
 from unittest import TestCase, main
 from interpreter import Interpreter
 
-def func(a, b):
+def add(a, b):
     return a + b
 
-def func2(x):
+def first(x):
     return x[0]
 
 class test_interpreter(TestCase):
     def test_eval_numerical_primitive(self):
-        inter = Interpreter()
-        result = inter.eval('123')
+        interp = Interpreter()
+        result = interp.eval('123')
         self.assertEquals(123, result)
 
     def test_eval_variable(self):
-        inter = Interpreter(namespace={'var': 123})
-        result = inter.eval('var')
+        interp = Interpreter(namespace={'var': 123})
+        result = interp.eval('var')
         self.assertEquals(123, result)
 
     def test_eval_function(self):
-        inter = Interpreter(namespace={'func': func})
-        result = inter.eval('func')
-        self.assertEquals(func, result)
+        interp = Interpreter(namespace={'add': add})
+        result = interp.eval('add')
+        self.assertEquals(add, result)
 
     def test_eval_combination(self):
-        inter = Interpreter(namespace={'func': func, 'var': 123})
-        result = inter.eval(['func', 'var', '456'])
+        interp = Interpreter(namespace={'add': add, 'var': 123})
+        result = interp.eval(['add', 'var', '456'])
         self.assertEquals(579, result)
 
     def test_eval_nested_combination(self):
-        inter = Interpreter(namespace={'func': func, 'var': 123})
-        result = inter.eval(['func', 'var', ['func', '1', '2']])
+        interp = Interpreter(namespace={'add': add, 'var': 123})
+        result = interp.eval(['add', 'var', ['add', '1', '2']])
         self.assertEquals(126, result)
 
     def test_eval_special_form(self):
-        inter = Interpreter(special_forms={'func': func2})
-        result = inter.eval(['func', 'var'])
+        interp = Interpreter(special_forms={'first': first})
+        result = interp.eval(['first', 'var'])
         self.assertEquals('var', result)
+
 
 if __name__ == '__main__':
     main()
