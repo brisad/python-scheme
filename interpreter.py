@@ -6,19 +6,21 @@ class Procedure(object):
         try:
             result = self.function(*args)
         except TypeError:
-            func = self._replace_arguments(args)
+            # Replace all parameters in with values of the arguments
+            func = [self._replace(x, args) for x in self.function]
             result = interpreter.eval(func)
         return result
 
-    def _replace_arguments(self, args):
-        result = []
-        for elem in self.function:
-            if isinstance(elem, Parameter):
-                result.append(args[elem.index])
-            else:
-                result.append(elem)
-        return result
-
+    def _replace(self, elem, args):
+        """Replace element with parameter if applicable."""
+        if isinstance(elem, Parameter):
+            # If elem is a parameter, return the value of the argument
+            return args[elem.index]
+        elif isinstance(elem, list):
+            return [self._replace(x, args) for x in elem]
+        else:
+            return elem
+            
 
 class Parameter(object):
     def __init__(self, index=0):

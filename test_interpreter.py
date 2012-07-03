@@ -45,6 +45,14 @@ class test_interpreter(TestCase):
         result = interp.eval(['func', '1', '2'])
         self.assertEquals(3, result)
 
+    def test_eval_nested_defined_procedure(self):
+        interp = Interpreter(namespace={'add': Procedure(add),
+                                        'func': Procedure(['add',
+                                                 Parameter(0),
+                                                 ['add', 20, Parameter(1)]])})
+        result = interp.eval(['func', '1', '2'])
+        self.assertEquals(23, result)
+
 
 if __name__ == '__main__':
     main()
