@@ -38,6 +38,12 @@ class test_interpreter(TestCase):
         result = interp.eval(['first', 'var'])
         self.assertEquals('var', result)
 
+    def test_eval_defined_procedure(self):
+        interp = Interpreter(namespace={'add': add,
+                                        'func': ['add', '(0)', '(1)']})
+        result = interp.eval(['func', '1', '2'])
+        self.assertEquals(3, result)
+
 
 if __name__ == '__main__':
     main()

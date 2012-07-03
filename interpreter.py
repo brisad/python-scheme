@@ -1,7 +1,19 @@
+import re
+
 class Interpreter(object):
     def __init__(self, namespace={}, special_forms={}):
         self.namespace = namespace
         self.special_forms = special_forms
+
+    def apply(self, procedure, arguments):
+        result = []
+        for elem in procedure:
+            m = re.search('\((\d)\)', elem)
+            if m:
+                result.append(arguments[int(m.group(1))])
+            else:
+                result.append(elem)
+        return result
 
     def eval(self, expression):
 
@@ -20,4 +32,9 @@ class Interpreter(object):
             l = [self.eval(subexpr) for subexpr in expression]
             # 2. Apply the operator to the operands
             f = l[0]
-            return f(*l[1:])
+
+            if isinstance(f, list):
+                result = self.apply(f, l[1:])
+                return self.eval(result)
+            else:
+                return f(*l[1:])
