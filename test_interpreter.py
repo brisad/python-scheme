@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from interpreter import Interpreter, Parameter
+from interpreter import Interpreter, Procedure, Parameter
 
 def add(a, b):
     return a + b
@@ -24,12 +24,12 @@ class test_interpreter(TestCase):
         self.assertEquals(add, result)
 
     def test_eval_combination(self):
-        interp = Interpreter(namespace={'add': add, 'var': 123})
+        interp = Interpreter(namespace={'add': Procedure(add), 'var': 123})
         result = interp.eval(['add', 'var', '456'])
         self.assertEquals(579, result)
 
     def test_eval_nested_combination(self):
-        interp = Interpreter(namespace={'add': add, 'var': 123})
+        interp = Interpreter(namespace={'add': Procedure(add), 'var': 123})
         result = interp.eval(['add', 'var', ['add', '1', '2']])
         self.assertEquals(126, result)
 
@@ -39,9 +39,9 @@ class test_interpreter(TestCase):
         self.assertEquals('var', result)
 
     def test_eval_defined_procedure(self):
-        interp = Interpreter(namespace={'add': add,
-                                        'func': ['add',
-                                                 Parameter(0), Parameter(1)]})
+        interp = Interpreter(namespace={'add': Procedure(add),
+                                        'func': Procedure(['add',
+                                                 Parameter(0), Parameter(1)])})
         result = interp.eval(['func', '1', '2'])
         self.assertEquals(3, result)
 
