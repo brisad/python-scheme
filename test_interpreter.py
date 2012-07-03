@@ -13,6 +13,11 @@ class test_interpreter(TestCase):
         result = interp.eval('123')
         self.assertEquals(123, result)
 
+    def test_eval_numerical_float_primitive(self):
+        interp = Interpreter()
+        result = interp.eval('3.14')
+        self.assertEquals(3.14, result)
+
     def test_eval_variable(self):
         interp = Interpreter(namespace={'var': 123})
         result = interp.eval('var')

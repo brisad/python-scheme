@@ -32,21 +32,25 @@ class Interpreter(object):
         self.namespace = namespace
         self.special_forms = special_forms
 
-    def eval(self, expression):
+    def eval(self, expr):
 
-        if not isinstance(expression, list):
+        if not isinstance(expr, list):
             try:
-                result = int(expression)
+                result = float(expr) if '.' in expr else int(expr)
             except ValueError:
-                result = self.namespace.get(expression)
+                # symbol
+                result = self.namespace.get(expr)
+            except TypeError:
+                # already numeral, evaluates to itself
+                result = expr
             return result
 
-        elif expression[0] in self.special_forms:
-            f = self.special_forms[expression[0]]
-            return f(expression[1:])
+        elif expr[0] in self.special_forms:
+            f = self.special_forms[expr[0]]
+            return f(expr[1:])
         else:
             # 1. Evaluate the subexpressions of the combination
-            l = [self.eval(subexpr) for subexpr in expression]
+            l = [self.eval(subexpr) for subexpr in expr]
             # 2. Apply the operator to the operands
             f = l[0]
             return f.apply(self, l[1:])
