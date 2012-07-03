@@ -5,30 +5,33 @@ class ParseError(Exception):
 
 class Parser(object):
 
-    def _recurse(self, fields):
+    def __init__(self):
+        self.tokenizer = re.compile(r'\(|\)|\+|\-|\*|/|\s*[\w\.]+')
+
+    def _recurse(self, tokens):
 
         result = []
-        for field in fields:
-            if field == '(':
-                field = self._recurse(fields)
-            if field == ')':
+        for token in tokens:
+            if token == '(':
+                token = self._recurse(tokens)
+            if token == ')':
                 break
-            result.append(field)
+            result.append(token)
         else:
             raise ParseError("Expected: ')'")
 
         return result
 
     def parse(self, string):
+        # Tokenize input and remove any spaces in the tokens
+        tokens = (x.strip() for x in self.tokenizer.findall(string))
 
-        fields = iter(re.findall(r'\(|\)|\b[^\W]+\b|\+|\-|\/|\*', string))
-
-        for first in fields:
+        for first in tokens:
             if first == ')':
                 raise ParseError("Unexpected: ')'")
             elif first == '(':
 
-                result = self._recurse(fields)
+                result = self._recurse(tokens)
                 if not result:
                     continue
             else: # Not '(', ')'

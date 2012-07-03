@@ -45,6 +45,9 @@ class test_parser(TestCase):
     def test_parser_primitive_expression(self):
         self.assert_parse_one_result('123', '123')
 
+    def test_parser_primitive_float_expression(self):
+        self.assert_parse_one_result('3.14', '3.14')
+
     def test_parser_multiple_expressions(self):
         self.assert_parse_results('10 () (+ 1 2)', ['10', ['+', '1', '2']])
 
