@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from interpreter import Interpreter
+from interpreter import Interpreter, Parameter
 
 def add(a, b):
     return a + b
@@ -40,7 +40,8 @@ class test_interpreter(TestCase):
 
     def test_eval_defined_procedure(self):
         interp = Interpreter(namespace={'add': add,
-                                        'func': ['add', '(0)', '(1)']})
+                                        'func': ['add',
+                                                 Parameter(0), Parameter(1)]})
         result = interp.eval(['func', '1', '2'])
         self.assertEquals(3, result)
 

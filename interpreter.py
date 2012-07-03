@@ -1,4 +1,7 @@
-import re
+class Parameter(object):
+    def __init__(self, index=0):
+        self.index = index
+
 
 class Interpreter(object):
     def __init__(self, namespace={}, special_forms={}):
@@ -8,9 +11,8 @@ class Interpreter(object):
     def apply(self, procedure, arguments):
         result = []
         for elem in procedure:
-            m = re.search('\((\d)\)', elem)
-            if m:
-                result.append(arguments[int(m.group(1))])
+            if isinstance(elem, Parameter):
+                result.append(arguments[elem.index])
             else:
                 result.append(elem)
         return result
