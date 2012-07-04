@@ -28,7 +28,12 @@ class Parameter(object):
 
 
 class Interpreter(object):
-    def __init__(self, namespace={}, special_forms={}):
+    def __init__(self, namespace=None, special_forms=None):
+        if namespace is None:
+            namespace = {}
+        if special_forms is None:
+            special_forms = {}
+
         self.namespace = namespace
         self.special_forms = special_forms
 
