@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from interpreter import Environment, Procedure, Parameter
+from interpreter import Environment, Procedure, Parameter, Builtins
 
 def add(a, b):
     return a + b
@@ -58,6 +58,36 @@ class test_environment(TestCase):
                                                  ['add', 20, Parameter(1)]])})
         result = env.eval(['func', '1', '2'])
         self.assertEquals(23, result)
+
+
+class test_builtins(TestCase):
+    def test_add_three_operands(self):
+        result = Builtins.add([1, 2, 3])
+        self.assertEquals(6, result)
+
+    def test_subtract_two_operands(self):
+        result = Builtins.subtract([3, 2])
+        self.assertEquals(1, result)
+
+    def test_subtract_three_operands(self):
+        result = Builtins.subtract([3, 2, 1])
+        self.assertEquals(0, result)
+
+    def test_subtract_one_operand_negation(self):
+        result = Builtins.subtract([1])
+        self.assertEquals(-1, result)
+
+    def test_multiply_three_operands(self):
+        result = Builtins.multiply([1, 2, 3])
+        self.assertEquals(6, result)
+
+    def test_divide_two_operands(self):
+        result = Builtins.divide([6, 2])
+        self.assertEquals(3, result)
+
+    def test_divide_three_operands(self):
+        result = Builtins.divide([12, 3, 2])
+        self.assertEquals(2, result)
 
 
 if __name__ == '__main__':

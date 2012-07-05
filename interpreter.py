@@ -1,3 +1,5 @@
+import operator
+
 class Procedure(object):
     def __init__(self, function):
         self.function = function
@@ -59,3 +61,32 @@ class Environment(object):
             # 2. Apply the operator to the operands
             f = l[0]
             return f.apply(self, l[1:])
+
+
+class Builtins(object):
+    @classmethod
+    def add(self, operands):
+        return sum(operands)
+
+    @classmethod
+    def subtract(self, operands):
+        if len(operands) == 1:
+            return -operands[0]
+        return operands[0] - sum(operands[1:])
+
+    @classmethod
+    def multiply(self, operands):
+        return reduce(operator.mul, operands)
+
+    @classmethod
+    def divide(self, operands):
+        return operands[0] / sum(operands[1:])
+
+    @classmethod
+    def namespace(cls):
+        return {
+            '+': Procedure(cls.add),
+            '-': Procedure(cls.subtract),
+            '*': Procedure(cls.multiply),
+            '/': Procedure(cls.divide)
+            }
