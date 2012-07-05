@@ -1,8 +1,8 @@
 from unittest import TestCase, main
 from interpreter import Environment, Procedure, Parameter, Builtins
 
-def add(a, b):
-    return a + b
+def add(operators):
+    return operators[0] + operators[1]
 
 def first(x):
     return x[0]

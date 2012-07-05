@@ -6,7 +6,7 @@ class Procedure(object):
 
     def apply(self, interpreter, args):
         try:
-            result = self.function(*args)
+            result = self.function(args)
         except TypeError:
             # Replace all parameters in with values of the arguments
             func = [self._replace(x, args) for x in self.function]
