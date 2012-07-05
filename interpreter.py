@@ -27,7 +27,7 @@ class Parameter(object):
         self.index = index
 
 
-class Interpreter(object):
+class Environment(object):
     def __init__(self, namespace=None, special_forms=None):
         if namespace is None:
             namespace = {}
