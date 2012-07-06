@@ -55,7 +55,7 @@ class Environment(object):
 
         elif expr[0] in self.special_forms:
             f = self.special_forms[expr[0]]
-            return f(expr[1:])
+            return f(self, expr[1:])
         else:
             # 1. Evaluate the subexpressions of the combination
             l = [self.eval(subexpr) for subexpr in expr]

@@ -1,11 +1,14 @@
 from unittest import TestCase, main
 from interpreter import Environment, Procedure, Parameter, Builtins
 
-def add(operators):
-    return operators[0] + operators[1]
+def add(operands):
+    return operands[0] + operands[1]
 
-def first(x):
+def first(env, x):
     return x[0]
+
+def return_env(env, x):
+    return env
 
 
 class test_environment(TestCase):
@@ -43,6 +46,11 @@ class test_environment(TestCase):
         env = Environment(special_forms={'first': first})
         result = env.eval(['first', 'var'])
         self.assertEquals('var', result)
+
+    def test_eval_special_form_gets_env(self):
+        env = Environment(special_forms={'env': return_env})
+        result = env.eval(['env'])
+        self.assertEquals(env, result)
 
     def test_eval_defined_procedure(self):
         env = Environment(namespace={'add': Procedure(add),
