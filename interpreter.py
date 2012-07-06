@@ -102,3 +102,14 @@ class Interpreter(object):
         parsed = self.parser.parse(inp)
         for expression in parsed:
             yield self.environment.eval(expression)
+
+
+if __name__ == '__main__':
+    interp = Interpreter()
+
+    try:
+        while True:
+            for result in interp.eval(raw_input()):
+                print result
+    except KeyboardInterrupt:
+        pass
