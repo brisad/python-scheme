@@ -1,4 +1,5 @@
 import operator
+from parser import Parser
 
 class Procedure(object):
     def __init__(self, function):
@@ -90,3 +91,14 @@ class Builtins(object):
             '*': Procedure(cls.multiply),
             '/': Procedure(cls.divide)
             }
+
+
+class Interpreter(object):
+    def __init__(self):
+        self.parser = Parser()
+        self.environment = Environment(namespace=Builtins.namespace())
+
+    def eval(self, inp):
+        parsed = self.parser.parse(inp)
+        for expression in parsed:
+            yield self.environment.eval(expression)
