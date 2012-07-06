@@ -5,13 +5,13 @@ class Procedure(object):
     def __init__(self, function):
         self.function = function
 
-    def apply(self, interpreter, args):
+    def apply(self, env, args):
         try:
             result = self.function(args)
         except TypeError:
             # Replace all parameters in with values of the arguments
             func = [self._replace(x, args) for x in self.function]
-            result = interpreter.eval(func)
+            result = env.eval(func)
         return result
 
     def _replace(self, elem, args):
