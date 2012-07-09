@@ -64,23 +64,36 @@ class Environment(object):
             return f.apply(self, l[1:])
 
 
+class SpecialForms(object):
+    @classmethod
+    def define(cls, env, operands):
+        env.namespace[operands[0]] = operands[1]
+
+    @classmethod
+    def if_(cls, env, operands):
+        if env.eval(operands[0]):
+            return env.eval(operands[1])
+        else:
+            return env.eval(operands[2])
+
+
 class Builtins(object):
     @classmethod
-    def add(self, operands):
+    def add(cls, operands):
         return sum(operands)
 
     @classmethod
-    def subtract(self, operands):
+    def subtract(cls, operands):
         if len(operands) == 1:
             return -operands[0]
         return operands[0] - sum(operands[1:])
 
     @classmethod
-    def multiply(self, operands):
+    def multiply(cls, operands):
         return reduce(operator.mul, operands)
 
     @classmethod
-    def divide(self, operands):
+    def divide(cls, operands):
         return operands[0] / sum(operands[1:])
 
     @classmethod

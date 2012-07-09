@@ -1,5 +1,7 @@
 from unittest import TestCase, main
-from interpreter import Environment, Procedure, Parameter, Builtins
+from mocker import MockerTestCase
+from interpreter import Environment, Procedure, Parameter, Builtins, \
+    SpecialForms
 
 def add(operands):
     return operands[0] + operands[1]
@@ -96,6 +98,27 @@ class test_builtins(TestCase):
     def test_divide_three_operands(self):
         result = Builtins.divide([12, 3, 2])
         self.assertEquals(2, result)
+
+
+class test_special_forms(MockerTestCase):
+    def test_define(self):
+        env = self.mocker.mock()
+        env.namespace['x'] = 42
+        self.mocker.replay()
+
+        result = SpecialForms.define(env, ['x', 42])
+        self.assertEquals(result, None)
+
+    def test_if_true(self):
+        env = self.mocker.mock()
+        env.eval('p')
+        self.mocker.result(True)
+        env.eval('yes')
+        self.mocker.result(2)
+        self.mocker.replay()
+
+        result = SpecialForms.if_(env, ['p', 'yes', 'no'])
+        self.assertEquals(result, 2)
 
 
 if __name__ == '__main__':
