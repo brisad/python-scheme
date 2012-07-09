@@ -1,21 +1,28 @@
 import os
+from itertools import ifilter, imap
 from interpreter import Interpreter
 
 def run_test(filename):
     interp = Interpreter()
-    response = None
-    num_tests = 0
+    num_tests, num_passed = 0, 0
     with open(filename) as f:
-        for line in f:
-            if response:
-                assert response == line.rstrip('\n')
-                response = None
-            elif line.startswith('> '):
+        # Iterate over non-blank lines
+        for line in ifilter(None, imap(str.strip, f)):
+            if line.startswith('> '):
                 num_tests += 1
                 for response in interp.eval(line[2:]):
-                    response = str(response)
-    print "{:20} Ran {} tests successfully".format(os.path.basename(filename),
-                                                    num_tests)
+                    response = repr(response) if response else ''
+                # Got respone, now read next line directly
+                expected = next(f).rstrip('\n')
+                if response != expected:
+                    print 'Failure: "%s" != "%s"' % (response, expected)
+                else:
+                    num_passed += 1
+            else:
+                print 'Unexpected line: "%s"' % line
+    print "{:20} Ran {} tests, {} passed".format(os.path.basename(filename),
+                                                 num_tests, num_passed)
+
 
 if __name__ == '__main__':
     sessiondir = 'tests/sessions'
