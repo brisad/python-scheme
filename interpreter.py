@@ -76,6 +76,13 @@ class SpecialForms(object):
         else:
             return env.eval(operands[2])
 
+    @classmethod
+    def namespace(cls):
+        return {
+            'define': cls.define,
+            'if': cls.if_
+            }
+
 
 class Builtins(object):
     @classmethod
@@ -109,7 +116,8 @@ class Builtins(object):
 class Interpreter(object):
     def __init__(self):
         self.parser = Parser()
-        self.environment = Environment(namespace=Builtins.namespace())
+        self.environment = Environment(namespace=Builtins.namespace(),
+                                       special_forms=SpecialForms.namespace())
 
     def eval(self, inp):
         parsed = self.parser.parse(inp)
