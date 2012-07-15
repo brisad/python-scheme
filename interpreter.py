@@ -23,7 +23,7 @@ class Procedure(object):
             return [self._replace(x, args) for x in elem]
         else:
             return elem
-            
+
 
 class Parameter(object):
     def __init__(self, index=0):
@@ -35,7 +35,8 @@ class Environment(object):
         if namespace is None:
             namespace = {}
         if special_forms is None:
-            special_forms = {}
+            special_forms = {'define': self._define,
+                             'if': self._if}
 
         self.namespace = namespace
         self.special_forms = special_forms
@@ -55,7 +56,7 @@ class Environment(object):
 
         elif expr[0] in self.special_forms:
             f = self.special_forms[expr[0]]
-            return f(self, expr[1:])
+            return f(expr[1:])
         else:
             # 1. Evaluate the subexpressions of the combination
             l = [self.eval(subexpr) for subexpr in expr]
@@ -63,25 +64,17 @@ class Environment(object):
             f = l[0]
             return f.apply(self, l[1:])
 
-
-class SpecialForms(object):
-    @classmethod
-    def define(cls, env, operands):
-        env.namespace[operands[0]] = operands[1]
-
-    @classmethod
-    def if_(cls, env, operands):
-        if env.eval(operands[0]):
-            return env.eval(operands[1])
+    def _define(self, operands):
+        if isinstance(operands[0], list):
+            self.namespace[operands[0][0]] = Procedure([Parameter(0)])
         else:
-            return env.eval(operands[2])
+            self.namespace[operands[0]] = operands[1]
 
-    @classmethod
-    def namespace(cls):
-        return {
-            'define': cls.define,
-            'if': cls.if_
-            }
+    def _if(self, operands):
+        if self.eval(operands[0]):
+            return self.eval(operands[1])
+        else:
+            return self.eval(operands[2])
 
 
 class Builtins(object):
@@ -116,8 +109,7 @@ class Builtins(object):
 class Interpreter(object):
     def __init__(self):
         self.parser = Parser()
-        self.environment = Environment(namespace=Builtins.namespace(),
-                                       special_forms=SpecialForms.namespace())
+        self.environment = Environment(namespace=Builtins.namespace())
 
     def eval(self, inp):
         parsed = self.parser.parse(inp)

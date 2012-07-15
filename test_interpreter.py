@@ -1,16 +1,11 @@
 from unittest import TestCase, main
-from mocker import MockerTestCase
-from interpreter import Environment, Procedure, Parameter, Builtins, \
-    SpecialForms
+from interpreter import Environment, Procedure, Parameter, Builtins
 
 def add(operands):
     return operands[0] + operands[1]
 
-def first(env, x):
+def first(x):
     return x[0]
-
-def return_env(env, x):
-    return env
 
 
 class test_environment(TestCase):
@@ -49,25 +44,34 @@ class test_environment(TestCase):
         result = env.eval(['first', 'var'])
         self.assertEquals('var', result)
 
-    def test_eval_special_form_gets_env(self):
-        env = Environment(special_forms={'env': return_env})
-        result = env.eval(['env'])
-        self.assertEquals(env, result)
-
     def test_eval_defined_procedure(self):
         env = Environment(namespace={'add': Procedure(add),
-                                        'func': Procedure(['add',
-                                                 Parameter(0), Parameter(1)])})
+                                     'func': Procedure(['add',
+                                                        Parameter(0),
+                                                        Parameter(1)])})
         result = env.eval(['func', '1', '2'])
         self.assertEquals(3, result)
 
     def test_eval_nested_defined_procedure(self):
-        env = Environment(namespace={'add': Procedure(add),
-                                        'func': Procedure(['add',
-                                                 Parameter(0),
-                                                 ['add', 20, Parameter(1)]])})
+        env = Environment(namespace={
+                'add': Procedure(add),
+                'func': Procedure(['add', Parameter(0),
+                                   ['add', 20, Parameter(1)]])})
         result = env.eval(['func', '1', '2'])
         self.assertEquals(23, result)
+
+    def test_define(self):
+        env = Environment()
+        result = env._define(['x', 42])
+        self.assertEquals(result, None)
+        self.assertEquals(env.namespace['x'], 42)
+
+    def test_if_true(self):
+        env = Environment(namespace={'predicate': 1,
+                                     'yes': 2,
+                                     'no': 3})
+        result = env._if(['predicate', 'yes', 'no'])
+        self.assertEquals(result, 2)
 
 
 class test_builtins(TestCase):
@@ -98,27 +102,6 @@ class test_builtins(TestCase):
     def test_divide_three_operands(self):
         result = Builtins.divide([12, 3, 2])
         self.assertEquals(2, result)
-
-
-class test_special_forms(MockerTestCase):
-    def test_define(self):
-        env = self.mocker.mock()
-        env.namespace['x'] = 42
-        self.mocker.replay()
-
-        result = SpecialForms.define(env, ['x', 42])
-        self.assertEquals(result, None)
-
-    def test_if_true(self):
-        env = self.mocker.mock()
-        env.eval('p')
-        self.mocker.result(True)
-        env.eval('yes')
-        self.mocker.result(2)
-        self.mocker.replay()
-
-        result = SpecialForms.if_(env, ['p', 'yes', 'no'])
-        self.assertEquals(result, 2)
 
 
 if __name__ == '__main__':
