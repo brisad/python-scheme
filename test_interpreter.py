@@ -9,74 +9,67 @@ def first(x):
 
 
 class test_environment(TestCase):
+    def setUp(self):
+        self.env = Environment()
+
+    def set_namespace(self, namespace):
+        self.env.namespace = namespace
+
+    def assert_eval_results(self, inp, outp):
+        result = self.env.eval(inp)
+        self.assertEqual(outp, result)
+
     def test_eval_numerical_primitive(self):
-        env = Environment()
-        result = env.eval('123')
-        self.assertEqual(123, result)
+        self.assert_eval_results('123', 123)
 
     def test_eval_numerical_float_primitive(self):
-        env = Environment()
-        result = env.eval('3.14')
-        self.assertEqual(3.14, result)
+        self.assert_eval_results('3.14', 3.14)
 
     def test_eval_variable(self):
-        env = Environment(namespace={'var': 123})
-        result = env.eval('var')
-        self.assertEqual(123, result)
+        self.set_namespace({'var': 123})
+        self.assert_eval_results('var', 123)
 
     def test_eval_function(self):
-        env = Environment(namespace={'add': add})
-        result = env.eval('add')
-        self.assertEqual(add, result)
+        self.set_namespace({'add': add})
+        self.assert_eval_results('add', add)
 
     def test_eval_combination(self):
-        env = Environment(namespace={'add': Procedure(add), 'var': 123})
-        result = env.eval(['add', 'var', '456'])
-        self.assertEqual(579, result)
+        self.set_namespace({'add': Procedure(add), 'var': 123})
+        self.assert_eval_results(['add', 'var', '456'], 579)
 
     def test_eval_nested_combination(self):
-        env = Environment(namespace={'add': Procedure(add), 'var': 123})
-        result = env.eval(['add', 'var', ['add', '1', '2']])
-        self.assertEqual(126, result)
+        self.set_namespace({'add': Procedure(add), 'var': 123})
+        self.assert_eval_results(['add', 'var', ['add', '1', '2']], 126)
 
     def test_eval_special_form(self):
-        env = Environment(special_forms={'first': first})
-        result = env.eval(['first', 'var'])
-        self.assertEqual('var', result)
+        self.env = Environment(special_forms={'first': first})
+        self.assert_eval_results(['first', 'var'], 'var')
 
     def test_eval_defined_procedure(self):
-        env = Environment(namespace={'add': Procedure(add),
-                                     'func': Procedure(['add',
-                                                        Parameter(0),
-                                                        Parameter(1)])})
-        result = env.eval(['func', '1', '2'])
-        self.assertEqual(3, result)
+        self.set_namespace({'add': Procedure(add),
+                            'func': Procedure(['add', Parameter(0),
+                                               Parameter(1)])})
+        self.assert_eval_results(['func', '1', '2'], 3)
 
     def test_eval_nested_defined_procedure(self):
-        env = Environment(namespace={
-                'add': Procedure(add),
-                'func': Procedure(['add', Parameter(0),
-                                   ['add', 20, Parameter(1)]])})
-        result = env.eval(['func', '1', '2'])
-        self.assertEqual(23, result)
+        self.set_namespace({'add': Procedure(add),
+                            'func': Procedure(['add', Parameter(0),
+                                               ['add', 20, Parameter(1)]])})
+        self.assert_eval_results(['func', '1', '2'], 23)
 
     def test_define(self):
-        env = Environment()
-        result = env._define(['x', 42])
+        result = self.env._define(['x', 42])
         self.assertEqual(result, None)
-        self.assertEqual(env.namespace['x'], 42)
+        self.assertEqual(self.env.namespace['x'], 42)
 
     def test_define_parameters(self):
-        env = Environment()
-        result = env._define([['x', 'param'], 'param'])
+        result = self.env._define([['x', 'param'], 'param'])
         self.assertEqual(result, None)
-        self.assertEqual(env.namespace['x'], Procedure([Parameter(0)]))
+        self.assertEqual(self.env.namespace['x'], Procedure([Parameter(0)]))
 
     def test_if_true(self):
-        env = Environment(namespace={'predicate': 1,
-                                     'yes': 2,
-                                     'no': 3})
-        result = env._if(['predicate', 'yes', 'no'])
+        self.set_namespace({'predicate': 1, 'yes': 2, 'no': 3})
+        result = self.env._if(['predicate', 'yes', 'no'])
         self.assertEqual(result, 2)
 
 
