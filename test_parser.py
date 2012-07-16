@@ -7,14 +7,14 @@ class test_parser(TestCase):
 
     def assert_parse_results(self, inp, outp):
         result = self.p.parse(inp)
-        self.assertEquals(outp, list(result))
+        self.assertEqual(outp, list(result))
 
     def assert_parse_one_result(self, inp, outp):
         result = self.p.parse(inp)
-        self.assertEquals(outp, list(result)[0])
+        self.assertEqual(outp, list(result)[0])
 
     def assert_parse_empty_iterator(self, inp):
-        self.assertEquals(0, len(list(self.p.parse(inp))))
+        self.assertEqual(0, len(list(self.p.parse(inp))))
 
     def test_parse_empty_input(self):
         self.assert_parse_empty_iterator('')
