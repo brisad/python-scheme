@@ -66,6 +66,12 @@ class test_environment(TestCase):
         self.assertEqual(result, None)
         self.assertEqual(env.namespace['x'], 42)
 
+    def test_define_parameters(self):
+        env = Environment()
+        result = env._define([['x', 'param'], 'param'])
+        self.assertEqual(result, None)
+        self.assertEqual(env.namespace['x'], Procedure([Parameter(0)]))
+
     def test_if_true(self):
         env = Environment(namespace={'predicate': 1,
                                      'yes': 2,
