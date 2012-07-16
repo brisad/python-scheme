@@ -104,5 +104,39 @@ class test_builtins(TestCase):
         self.assertEquals(2, result)
 
 
+class test_procedure(TestCase):
+    def test_equality_true(self):
+        p1 = Procedure(add)
+        p2 = Procedure(add)
+        p3 = Procedure(['foo', Parameter(0)])
+        p4 = Procedure(['foo', Parameter(0)])
+
+        self.assertEqual(p1, p2)
+        self.assertEqual(p3, p4)
+
+    def test_equality_false(self):
+        p1 = Procedure(add)
+        p2 = Procedure(sum)
+        p3 = Procedure(['foo', Parameter(0)])
+        p4 = Procedure(['foo', Parameter(1)])
+        p5 = Procedure(['bar', Parameter(0)])
+
+        self.assertNotEqual(p1, p2)
+        self.assertNotEqual(p3, p4)
+        self.assertNotEqual(p4, p5)
+
+
+class test_parameter(TestCase):
+    def test_equality_true(self):
+        p1 = Parameter(0)
+        p2 = Parameter(0)
+        self.assertEqual(p1, p2)
+
+    def test_equality_false(self):
+        p1 = Parameter(0)
+        p2 = Parameter(1)
+        self.assertNotEqual(p1, p2)
+
+
 if __name__ == '__main__':
     main()

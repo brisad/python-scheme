@@ -24,10 +24,22 @@ class Procedure(object):
         else:
             return elem
 
+    def __eq__(self, other):
+        return self.function == other.function
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class Parameter(object):
     def __init__(self, index=0):
         self.index = index
+
+    def __eq__(self, other):
+        return self.index == other.index
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Environment(object):
