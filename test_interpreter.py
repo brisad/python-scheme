@@ -1,5 +1,6 @@
 from unittest import TestCase, main
-from interpreter import Environment, Procedure, Parameter, Builtins
+from mocker import Mocker
+from interpreter import Environment, Procedure, Builtins
 
 def add(operands):
     return operands[0] + operands[1]
@@ -18,6 +19,11 @@ class test_environment(TestCase):
     def assert_eval_results(self, inp, outp):
         result = self.env.eval(inp)
         self.assertEqual(outp, result)
+
+    def assert_define_sets_namespace(self, inp, name, contents):
+        result = self.env._define(inp)
+        self.assertEqual(result, None)
+        self.assertEqual(self.env.namespace[name], contents)
 
     def test_eval_numerical_primitive(self):
         self.assert_eval_results('123', 123)
@@ -47,25 +53,28 @@ class test_environment(TestCase):
 
     def test_eval_defined_procedure(self):
         self.set_namespace({'add': Procedure(add),
-                            'func': Procedure(['add', Parameter(0),
-                                               Parameter(1)])})
+                            'func': Procedure(['add', 'x', 'y'],
+                                              parameters=['x', 'y'])})
         self.assert_eval_results(['func', '1', '2'], 3)
 
     def test_eval_nested_defined_procedure(self):
         self.set_namespace({'add': Procedure(add),
-                            'func': Procedure(['add', Parameter(0),
-                                               ['add', 20, Parameter(1)]])})
+                            'func': Procedure(['add', 'x', ['add', 20, 'y']],
+                                              parameters=['x', 'y'])})
         self.assert_eval_results(['func', '1', '2'], 23)
 
     def test_define(self):
-        result = self.env._define(['x', 42])
-        self.assertEqual(result, None)
-        self.assertEqual(self.env.namespace['x'], 42)
+        self.assert_define_sets_namespace(['x', 42], 'x', 42)
 
-    def test_define_parameters(self):
-        result = self.env._define([['x', 'param'], 'param'])
-        self.assertEqual(result, None)
-        self.assertEqual(self.env.namespace['x'], Procedure([Parameter(0)]))
+    def test_define_parameters1(self):
+        self.assert_define_sets_namespace(
+            [['x', 'param'], 'param'],
+            'x', Procedure('param', parameters=['param']))
+
+    def test_define_parameters2(self):
+        self.assert_define_sets_namespace(
+            [['f', 'x', 'y', 'z'], ['x', 'y', 'z']],
+            'f', Procedure(['x', 'y', 'z'], parameters=['x', 'y', 'z']))
 
     def test_if_true(self):
         self.set_namespace({'predicate': 1, 'yes': 2, 'no': 3})
@@ -107,34 +116,37 @@ class test_procedure(TestCase):
     def test_equality_true(self):
         p1 = Procedure(add)
         p2 = Procedure(add)
-        p3 = Procedure(['foo', Parameter(0)])
-        p4 = Procedure(['foo', Parameter(0)])
-
+        p3 = Procedure(['foo', 'a'], parameters=['a'])
+        p4 = Procedure(['foo', 'a'], parameters=['a'])
         self.assertEqual(p1, p2)
         self.assertEqual(p3, p4)
 
     def test_equality_false(self):
         p1 = Procedure(add)
         p2 = Procedure(sum)
-        p3 = Procedure(['foo', Parameter(0)])
-        p4 = Procedure(['foo', Parameter(1)])
-        p5 = Procedure(['bar', Parameter(0)])
-
+        p3 = Procedure(['foo', 'a'], parameters=['a'])
+        p4 = Procedure(['foo', 'a'])
+        p5 = Procedure(['bar', 'a'])
         self.assertNotEqual(p1, p2)
         self.assertNotEqual(p3, p4)
         self.assertNotEqual(p4, p5)
 
+    def test_apply_python_function(self):
+        p = Procedure(add)
+        result = p.apply(None, [1, 2])
+        self.assertEquals(result, 3)
 
-class test_parameter(TestCase):
-    def test_equality_true(self):
-        p1 = Parameter(0)
-        p2 = Parameter(0)
-        self.assertEqual(p1, p2)
+    def test_apply_combination(self):
+        e = Environment(namespace={'f': Procedure(add)})
+        p = Procedure(['f', 'x', 'y'], parameters=['x', 'y'])
+        result = p.apply(e, [1, 2])
+        self.assertEquals(result, 3)
 
-    def test_equality_false(self):
-        p1 = Parameter(0)
-        p2 = Parameter(1)
-        self.assertNotEqual(p1, p2)
+    def test_apply_primitive_body(self):
+        e = Environment()
+        p = Procedure('x', parameters=['x'])
+        result = p.apply(e, [20])
+        self.assertEquals(result, 20)
 
 
 if __name__ == '__main__':
