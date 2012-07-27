@@ -8,14 +8,23 @@ class Parser(object):
     def __init__(self):
         self.tokenizer = re.compile(r'\(|\)|\+|\-|\*|/|\s*[\w\.]+')
 
+    def _convert(self, primitive):
+        try:
+            return float(primitive) if '.' in primitive else int(primitive)
+        except ValueError:
+            return primitive
+
     def _recurse(self, tokens):
 
         result = []
         for token in tokens:
             if token == '(':
                 token = self._recurse(tokens)
-            if token == ')':
+            elif token == ')':
                 break
+            else:
+                token = self._convert(token)
+
             result.append(token)
         else:
             raise ParseError("Expected: ')'")
@@ -36,6 +45,6 @@ class Parser(object):
                     continue
             else: # Not '(', ')'
                 # Not a combination, yield primitive expression
-                result = first
+                result = self._convert(first)
 
             yield result
