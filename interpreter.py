@@ -38,12 +38,8 @@ class Environment(object):
 
         if not isinstance(expr, list):
             try:
-                result = float(expr) if '.' in expr else int(expr)
-            except ValueError:
-                # symbol
-                result = self.namespace.get(expr)
-            except TypeError:
-                # already numeral, evaluates to itself
+                result = self.namespace[expr]
+            except KeyError:
                 result = expr
             return result
 

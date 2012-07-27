@@ -26,10 +26,10 @@ class test_environment(TestCase):
         self.assertEqual(self.env.namespace[name], contents)
 
     def test_eval_numerical_primitive(self):
-        self.assert_eval_results('123', 123)
+        self.assert_eval_results(123, 123)
 
     def test_eval_numerical_float_primitive(self):
-        self.assert_eval_results('3.14', 3.14)
+        self.assert_eval_results(3.14, 3.14)
 
     def test_eval_variable(self):
         self.set_namespace({'var': 123})
@@ -41,11 +41,11 @@ class test_environment(TestCase):
 
     def test_eval_combination(self):
         self.set_namespace({'add': Procedure(add), 'var': 123})
-        self.assert_eval_results(['add', 'var', '456'], 579)
+        self.assert_eval_results(['add', 'var', 456], 579)
 
     def test_eval_nested_combination(self):
         self.set_namespace({'add': Procedure(add), 'var': 123})
-        self.assert_eval_results(['add', 'var', ['add', '1', '2']], 126)
+        self.assert_eval_results(['add', 'var', ['add', 1, 2]], 126)
 
     def test_eval_special_form(self):
         self.env = Environment(special_forms={'first': first})
@@ -55,13 +55,13 @@ class test_environment(TestCase):
         self.set_namespace({'add': Procedure(add),
                             'func': Procedure(['add', 'x', 'y'],
                                               parameters=['x', 'y'])})
-        self.assert_eval_results(['func', '1', '2'], 3)
+        self.assert_eval_results(['func', 1, 2], 3)
 
     def test_eval_nested_defined_procedure(self):
         self.set_namespace({'add': Procedure(add),
                             'func': Procedure(['add', 'x', ['add', 20, 'y']],
                                               parameters=['x', 'y'])})
-        self.assert_eval_results(['func', '1', '2'], 23)
+        self.assert_eval_results(['func', 1, 2], 23)
 
     def test_define(self):
         self.assert_define_sets_namespace(['x', 42], 'x', 42)
