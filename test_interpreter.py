@@ -66,6 +66,10 @@ class test_environment(TestCase):
     def test_define(self):
         self.assert_define_sets_namespace(['x', 42], 'x', 42)
 
+    def test_define_evals_argument_without_parameters(self):
+        self.set_namespace({'add': Procedure(add)})
+        self.assert_define_sets_namespace(['x', ['add', 1, 2]], 'x', 3)
+
     def test_define_parameters1(self):
         self.assert_define_sets_namespace(
             [['x', 'param'], 'param'],

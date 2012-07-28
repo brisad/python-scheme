@@ -59,7 +59,7 @@ class Environment(object):
             self.namespace[name] = Procedure(operands[1],
                                              parameters=operands[0][1:])
         else:
-            self.namespace[operands[0]] = operands[1]
+            self.namespace[operands[0]] = self.eval(operands[1])
 
     def _if(self, operands):
         if self.eval(operands[0]):
