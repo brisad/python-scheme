@@ -51,6 +51,8 @@ class Parser(object):
             yield result
 
     def next_token(self, stream):
+        """Return next token from stream."""
+
         if self.push_back is not None:
             result = self.push_back
             self.push_back = None
@@ -80,13 +82,23 @@ class Parser(object):
         return token if token != '' else None
 
     def next_expr(self, stream):
+        """Return next expression from stream."""
+
         expr = []
         token = self.next_token(stream)
         if token == '(':
-            subexpr = self.next_expr(stream)
-            while subexpr != ')':
+            # Find all subexpressions, continue until we get a
+            # ParseError due to a closing parenthesis
+            while True:
+                try:
+                    subexpr = self.next_expr(stream)
+                except ParseError:
+                    break
                 expr.append(subexpr)
-                subexpr = self.next_expr(stream)
+
+        elif token == ')':
+            # A single closing parenthesis is an invalid expression
+            raise ParseError("Unexpected: ')'")
         else:
             expr = token
 

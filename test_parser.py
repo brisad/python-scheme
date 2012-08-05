@@ -94,6 +94,10 @@ class test_parser(TestCase):
         result = self.p.next_expr(stream)
         self.assertEqual(['c'], result)
 
+    def test_next_expr_unmatched_parantheses_throws_error(self):
+        stream = StringIO.StringIO(')')
+        self.assertRaises(ParseError, self.p.next_expr, stream)
+
 
 if __name__ == '__main__':
     main()
