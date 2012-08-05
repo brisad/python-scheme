@@ -7,6 +7,7 @@ class Parser(object):
 
     def __init__(self):
         self.tokenizer = re.compile(r'\(|\)|\+|\-|\*|/|\s*[\w\.]+')
+        self.push_back = None
 
     def _convert(self, primitive):
         try:
@@ -48,3 +49,45 @@ class Parser(object):
                 result = self._convert(first)
 
             yield result
+
+    def next_token(self, stream):
+        if self.push_back is not None:
+            result = self.push_back
+            self.push_back = None
+            return result
+
+        # Read up until first non-whitespace character
+        c = stream.read(1)
+        while c.isspace():
+            c = stream.read(1)
+
+        # Parentheses are special, return them immediately if found
+        if c == '(' or c == ')':
+            token = c
+        else:
+            token = ''
+            # Build up the token until a whitespace or parenthesis are
+            # found
+            while not c.isspace() and len(c) > 0 and c != '(' and c != ')':
+                token += c
+                c = stream.read(1)
+            # If we found a parenthesis, push it back so that it will
+            # be read at next call
+            if c == '(' or c == ')':
+                self.push_back = c
+
+        token = self._convert(token)
+        return token if token != '' else None
+
+    def next_expr(self, stream):
+        expr = []
+        token = self.next_token(stream)
+        if token == '(':
+            subexpr = self.next_expr(stream)
+            while subexpr != ')':
+                expr.append(subexpr)
+                subexpr = self.next_expr(stream)
+        else:
+            expr = token
+
+        return expr
