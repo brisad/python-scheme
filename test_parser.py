@@ -98,6 +98,10 @@ class test_parser(TestCase):
         stream = StringIO.StringIO(')')
         self.assertRaises(ParseError, self.p.next_expr, stream)
 
+    def test_next_expr_uncomplete_throws_error(self):
+        stream = StringIO.StringIO('(+ 1')
+        self.assertRaises(ParseError, self.p.next_expr, stream)
+
 
 if __name__ == '__main__':
     main()

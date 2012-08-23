@@ -94,6 +94,10 @@ class Parser(object):
                     subexpr = self.next_expr(stream)
                 except ParseError:
                     break
+
+                if subexpr is None:
+                    # Reached EOF
+                    raise ParseError("Unexpected: EOF")
                 expr.append(subexpr)
 
         elif token == ')':
