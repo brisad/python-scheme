@@ -1,3 +1,4 @@
+import sys
 import re
 
 class ParseError(Exception):
@@ -53,18 +54,23 @@ class Parser(object):
     def next_token(self, stream):
         """Return next token from stream."""
 
+        # If there's a character in self.push_back, use it.  Otherwise
+        # read the next one from the stream.
         if self.push_back is not None:
-            result = self.push_back
+            c = self.push_back
             self.push_back = None
-            return result
-
-        # Read up until first non-whitespace character
-        c = stream.read(1)
-        while c.isspace():
+        else:
             c = stream.read(1)
 
-        # Parentheses are special, return them immediately if found
-        if c == '(' or c == ')':
+        # Read up until the first non-whitespace character, but
+        # exclude newlines from characters to skip, as they will be
+        # returned as tokens.  This is to aid interactive terminals.
+        while c.isspace() and c != '\n':
+            c = stream.read(1)
+
+        # Parentheses and newlines are special, return them
+        # immediately if found.
+        if c == '(' or c == ')' or c == '\n':
             token = c
         else:
             token = ''
@@ -73,25 +79,32 @@ class Parser(object):
             while not c.isspace() and len(c) > 0 and c != '(' and c != ')':
                 token += c
                 c = stream.read(1)
-            # If we found a parenthesis, push it back so that it will
-            # be read at next call
-            if c == '(' or c == ')':
-                self.push_back = c
+            # Push next character back so that it will be read at next
+            # call
+            self.push_back = c
 
         token = self._convert(token)
         return token if token != '' else None
 
-    def next_expr(self, stream):
-        """Return next expression from stream."""
+    def next_expr(self, inp, outp=sys.stdout, prompt=None):
+        """Return next expression from input stream.
+
+        If prompt is not None, output its value on output stream
+        everytime a newline is encountered in the input."""
 
         expr = []
-        token = self.next_token(stream)
+        token = self.next_token(inp)
+        while token == '\n':
+            if prompt:
+                outp.write(prompt)
+            token = self.next_token(inp)
+
         if token == '(':
             # Find all subexpressions, continue until we get a
             # ParseError due to a closing parenthesis
             while True:
                 try:
-                    subexpr = self.next_expr(stream)
+                    subexpr = self.next_expr(inp)
                 except ParseError:
                     break
 

@@ -102,6 +102,13 @@ class test_parser(TestCase):
         stream = StringIO.StringIO('(+ 1')
         self.assertRaises(ParseError, self.p.next_expr, stream)
 
+    def test_next_expr_interactive_shows_prompt(self):
+        stream = StringIO.StringIO('\n')
+        outstream = StringIO.StringIO()
+        self.p.next_expr(stream, outp=outstream, prompt='> ')
+        outstream.seek(0)
+        self.assertEqual('> ', outstream.read())
+
 
 if __name__ == '__main__':
     main()
