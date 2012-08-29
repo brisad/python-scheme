@@ -86,7 +86,7 @@ class Parser(object):
         token = self._convert(token)
         return token if token != '' else None
 
-    def next_expr(self, inp, outp=sys.stdout, prompt=None):
+    def _get_next_expr(self, inp, outp=sys.stdout, prompt=None):
         """Return next expression from input stream.
 
         If prompt is not None, output its value on output stream
@@ -104,7 +104,7 @@ class Parser(object):
             # ParseError due to a closing parenthesis
             while True:
                 try:
-                    subexpr = self.next_expr(inp)
+                    subexpr = self._get_next_expr(inp)
                 except ParseError:
                     break
 
@@ -120,3 +120,9 @@ class Parser(object):
             expr = token
 
         return expr
+
+    def next_expr(self, inp, outp=sys.stdout, prompt=None):
+        expr = self._get_next_expr(inp, outp, prompt)
+        while expr is not None:
+            yield expr
+            expr = self._get_next_expr(inp, outp, prompt)

@@ -49,13 +49,25 @@ class test_parser(TestCase):
 
 ##
 
-    def assert_next_expr_results(self, inp, outp):
+    def list_next_expr(self, inp):
         stream = StringIO.StringIO(inp)
         result = self.p.next_expr(stream)
-        self.assertEqual(outp, result)
+        return list(result)
+
+    def assert_next_expr_results(self, inp, outp):
+        self.assertEqual(outp, self.list_next_expr(inp)[0])
+
+    def assert_next_expr_results_all(self, inp, outp):
+        self.assertEqual(outp, self.list_next_expr(inp))
+
+    def assert_next_expr_none(self, inp):
+        self.assertEqual(0, len(self.list_next_expr(inp)))
+
+    def assert_next_expr_throws(self, inp, error):
+        self.assertRaises(error, self.list_next_expr, inp)
 
     def test_next_expr_empty(self):
-        self.assert_next_expr_results('', None)
+        self.assert_next_expr_none('')
 
     def test_next_expr_symbol(self):
         self.assert_next_expr_results('symbol', 'symbol')
@@ -85,27 +97,18 @@ class test_parser(TestCase):
                                        ['a', 'b', 'c'], [.9, 'o/', '/']])
 
     def test_next_expr_multiple(self):
-        stream = StringIO.StringIO('(a) (b) (c)')
-
-        result = self.p.next_expr(stream)
-        self.assertEqual(['a'], result)
-        result = self.p.next_expr(stream)
-        self.assertEqual(['b'], result)
-        result = self.p.next_expr(stream)
-        self.assertEqual(['c'], result)
+        self.assert_next_expr_results_all('(a) b (c)', [['a'], 'b', ['c']])
 
     def test_next_expr_unmatched_parantheses_throws_error(self):
-        stream = StringIO.StringIO(')')
-        self.assertRaises(ParseError, self.p.next_expr, stream)
+        self.assert_next_expr_throws(')', ParseError)
 
     def test_next_expr_uncomplete_throws_error(self):
-        stream = StringIO.StringIO('(+ 1')
-        self.assertRaises(ParseError, self.p.next_expr, stream)
-
+        self.assert_next_expr_throws('(+ 1', ParseError)
+ 
     def test_next_expr_interactive_shows_prompt(self):
         stream = StringIO.StringIO('\n')
         outstream = StringIO.StringIO()
-        self.p.next_expr(stream, outp=outstream, prompt='> ')
+        list(self.p.next_expr(stream, outp=outstream, prompt='> '))
         outstream.seek(0)
         self.assertEqual('> ', outstream.read())
 
