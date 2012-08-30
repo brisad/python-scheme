@@ -49,68 +49,68 @@ class test_parser(TestCase):
 
 ##
 
-    def list_next_expr(self, inp):
+    def list_expressions(self, inp):
         stream = StringIO.StringIO(inp)
         self.p = Parser(stream)
-        result = self.p.next_expr()
+        result = self.p.expressions()
         return list(result)
 
-    def assert_next_expr_results(self, inp, outp):
-        self.assertEqual(outp, self.list_next_expr(inp)[0])
+    def assert_expressions_results(self, inp, outp):
+        self.assertEqual(outp, self.list_expressions(inp)[0])
 
-    def assert_next_expr_results_all(self, inp, outp):
-        self.assertEqual(outp, self.list_next_expr(inp))
+    def assert_expressions_results_all(self, inp, outp):
+        self.assertEqual(outp, self.list_expressions(inp))
 
-    def assert_next_expr_none(self, inp):
-        self.assertEqual(0, len(self.list_next_expr(inp)))
+    def assert_expressions_none(self, inp):
+        self.assertEqual(0, len(self.list_expressions(inp)))
 
-    def assert_next_expr_throws(self, inp, error):
-        self.assertRaises(error, self.list_next_expr, inp)
+    def assert_expressions_throws(self, inp, error):
+        self.assertRaises(error, self.list_expressions, inp)
 
-    def test_next_expr_empty(self):
-        self.assert_next_expr_none('')
+    def test_expressions_empty(self):
+        self.assert_expressions_none('')
 
-    def test_next_expr_symbol(self):
-        self.assert_next_expr_results('symbol', 'symbol')
+    def test_expressions_symbol(self):
+        self.assert_expressions_results('symbol', 'symbol')
 
-    def test_next_expr_symbol_with_whitespace(self):
-        self.assert_next_expr_results(' symbol ', 'symbol')
+    def test_expressions_symbol_with_whitespace(self):
+        self.assert_expressions_results(' symbol ', 'symbol')
 
-    def test_next_expr_integer(self):
-        self.assert_next_expr_results('42', 42)
+    def test_expressions_integer(self):
+        self.assert_expressions_results('42', 42)
 
-    def test_next_expr_zero(self):
-        self.assert_next_expr_results('0', 0)
+    def test_expressions_zero(self):
+        self.assert_expressions_results('0', 0)
 
-    def test_next_expr_float(self):
-        self.assert_next_expr_results('3.14', 3.14)
+    def test_expressions_float(self):
+        self.assert_expressions_results('3.14', 3.14)
 
-    def test_next_expr_combination(self):
-        self.assert_next_expr_results('(symbol 42 3.14)', ['symbol', 42, 3.14])
+    def test_expressions_combination(self):
+        self.assert_expressions_results('(symbol 42 3.14)', ['symbol', 42, 3.14])
 
-    def test_next_expr_nested_combination(self):
-        self.assert_next_expr_results('(symbol (42 (3.14) 0))',
+    def test_expressions_nested_combination(self):
+        self.assert_expressions_results('(symbol (42 (3.14) 0))',
                                       ['symbol', [42, [3.14], 0]])
 
-    def test_next_expr_complex(self):
-        self.assert_next_expr_results('(a-b - + a+b .( a  b c)(.9 o/ /))',
+    def test_expressions_complex(self):
+        self.assert_expressions_results('(a-b - + a+b .( a  b c)(.9 o/ /))',
                                       ['a-b', '-', '+', 'a+b', '.',
                                        ['a', 'b', 'c'], [.9, 'o/', '/']])
 
-    def test_next_expr_multiple(self):
-        self.assert_next_expr_results_all('(a) b (c)', [['a'], 'b', ['c']])
+    def test_expressions_multiple(self):
+        self.assert_expressions_results_all('(a) b (c)', [['a'], 'b', ['c']])
 
-    def test_next_expr_unmatched_parantheses_throws_error(self):
-        self.assert_next_expr_throws(')', ParseError)
+    def test_expressions_unmatched_parantheses_throws_error(self):
+        self.assert_expressions_throws(')', ParseError)
 
-    def test_next_expr_uncomplete_throws_error(self):
-        self.assert_next_expr_throws('(+ 1', ParseError)
+    def test_expressions_uncomplete_throws_error(self):
+        self.assert_expressions_throws('(+ 1', ParseError)
  
-    def test_next_expr_interactive_shows_prompt(self):
+    def test_expressions_interactive_shows_prompt(self):
         stream = StringIO.StringIO('\n')
         outstream = StringIO.StringIO()
         self.p = Parser(stream, outstream, '> ')
-        list(self.p.next_expr())
+        list(self.p.expressions())
         outstream.seek(0)
         self.assertEqual('> ', outstream.read())
 

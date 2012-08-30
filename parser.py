@@ -124,7 +124,9 @@ class Parser(object):
 
         return expr
 
-    def next_expr(self):
+    def expressions(self):
+        """Return all expressions in stream as generator."""
+
         expr = self._get_next_expr()
         while expr is not None:
             yield expr
