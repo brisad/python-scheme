@@ -6,9 +6,12 @@ class ParseError(Exception):
 
 class Parser(object):
 
-    def __init__(self):
+    def __init__(self, stream=None, output=None, prompt=None):
         self.tokenizer = re.compile(r'\(|\)|\+|\-|\*|/|\s*[\w\.]+')
         self.push_back = None
+        self.stream = stream
+        self.output = output
+        self.prompt = prompt
 
     def _convert(self, primitive):
         try:
@@ -86,25 +89,25 @@ class Parser(object):
         token = self._convert(token)
         return token if token != '' else None
 
-    def _get_next_expr(self, inp, outp=sys.stdout, prompt=None):
+    def _get_next_expr(self):
         """Return next expression from input stream.
 
-        If prompt is not None, output its value on output stream
-        everytime a newline is encountered in the input."""
+        If set, output prompt on output stream everytime a newline is
+        encountered in the input."""
 
         expr = []
-        token = self.next_token(inp)
+        token = self.next_token(self.stream)
         while token == '\n':
-            if prompt:
-                outp.write(prompt)
-            token = self.next_token(inp)
+            if self.prompt:
+                self.output.write(self.prompt)
+            token = self.next_token(self.stream)
 
         if token == '(':
             # Find all subexpressions, continue until we get a
             # ParseError due to a closing parenthesis
             while True:
                 try:
-                    subexpr = self._get_next_expr(inp)
+                    subexpr = self._get_next_expr()
                 except ParseError:
                     break
 
@@ -121,8 +124,8 @@ class Parser(object):
 
         return expr
 
-    def next_expr(self, inp, outp=sys.stdout, prompt=None):
-        expr = self._get_next_expr(inp, outp, prompt)
+    def next_expr(self):
+        expr = self._get_next_expr()
         while expr is not None:
             yield expr
-            expr = self._get_next_expr(inp, outp, prompt)
+            expr = self._get_next_expr()

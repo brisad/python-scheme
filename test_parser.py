@@ -51,7 +51,8 @@ class test_parser(TestCase):
 
     def list_next_expr(self, inp):
         stream = StringIO.StringIO(inp)
-        result = self.p.next_expr(stream)
+        self.p = Parser(stream)
+        result = self.p.next_expr()
         return list(result)
 
     def assert_next_expr_results(self, inp, outp):
@@ -108,7 +109,8 @@ class test_parser(TestCase):
     def test_next_expr_interactive_shows_prompt(self):
         stream = StringIO.StringIO('\n')
         outstream = StringIO.StringIO()
-        list(self.p.next_expr(stream, outp=outstream, prompt='> '))
+        self.p = Parser(stream, outstream, '> ')
+        list(self.p.next_expr())
         outstream.seek(0)
         self.assertEqual('> ', outstream.read())
 
