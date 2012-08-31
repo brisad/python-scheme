@@ -1,3 +1,4 @@
+import sys
 import operator
 from parser import Parser
 
@@ -98,22 +99,24 @@ class Builtins(object):
 
 
 class Interpreter(object):
-    def __init__(self):
-        self.parser = Parser()
+    def __init__(self, instream=sys.stdin, outstream=sys.stdout,
+                 prompt1='> ', prompt2=None):
+        self.instream = instream
+        self.outstream = outstream
+        self.prompt1 = prompt1
+        self.prompt2 = prompt2
+        self.parser = Parser(self.instream, self.outstream,
+                             self.prompt1, self.prompt2)
         self.environment = Environment(namespace=Builtins.namespace())
 
-    def eval(self, inp):
-        parsed = self.parser.parse(inp)
-        for expression in parsed:
-            yield self.environment.eval(expression)
+    def run(self):
+        self.outstream.write(self.prompt1)
+        try:
+            for expr in self.parser.expressions():
+                print self.environment.eval(expr)
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == '__main__':
-    interp = Interpreter()
-
-    try:
-        while True:
-            for result in interp.eval(raw_input()):
-                print result
-    except KeyboardInterrupt:
-        pass
+    Interpreter().run()

@@ -1,21 +1,26 @@
 import os
+import StringIO
 from itertools import ifilter, imap
-from interpreter import Interpreter
+from interpreter import Environment, Builtins
+from parser import Parser
 
 def run_test(filename):
-    interp = Interpreter()
+    env = Environment(namespace=Builtins.namespace())
     num_tests, num_passed = 0, 0
     with open(filename) as f:
         # Iterate over non-blank lines
         for line in ifilter(None, imap(str.strip, f)):
             if line.startswith('> '):
                 num_tests += 1
-                for response in interp.eval(line[2:]):
-                    response = repr(response) if response else ''
+
+                for expr in Parser(StringIO.StringIO(line[2:])).expressions():
+                    result = env.eval(expr)
+                    result = repr(result) if result else ''
+
                 # Got respone, now read next line directly
                 expected = next(f).rstrip('\n')
-                if response != expected:
-                    print 'Failure: "%s" != "%s"' % (response, expected)
+                if result != expected:
+                    print 'Failure: "%s" != "%s"' % (result, expected)
                 else:
                     num_passed += 1
             else:
