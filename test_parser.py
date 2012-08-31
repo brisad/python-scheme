@@ -114,6 +114,14 @@ class test_parser(TestCase):
         outstream.seek(0)
         self.assertEqual('> ', outstream.read())
 
+    def test_expressions_interactive_shows_secondary_prompt(self):
+        stream = StringIO.StringIO('(\n)')
+        outstream = StringIO.StringIO()
+        self.p = Parser(stream, outstream, '> ', '. ')
+        list(self.p.expressions())
+        outstream.seek(0)
+        self.assertEqual('. ', outstream.read())
+
 
 if __name__ == '__main__':
     main()

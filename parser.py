@@ -6,12 +6,13 @@ class ParseError(Exception):
 
 class Parser(object):
 
-    def __init__(self, stream=None, output=None, prompt=None):
+    def __init__(self, stream=None, output=None, prompt1=None, prompt2=None):
         self.tokenizer = re.compile(r'\(|\)|\+|\-|\*|/|\s*[\w\.]+')
         self.push_back = None
         self.stream = stream
         self.output = output
-        self.prompt = prompt
+        self.prompt1 = prompt1
+        self.prompt2 = prompt2
 
     def _convert(self, primitive):
         try:
@@ -89,7 +90,7 @@ class Parser(object):
         token = self._convert(token)
         return token if token != '' else None
 
-    def _get_next_expr(self):
+    def _get_next_expr(self, prompt):
         """Return next expression from input stream.
 
         If set, output prompt on output stream everytime a newline is
@@ -98,8 +99,8 @@ class Parser(object):
         expr = []
         token = self.next_token(self.stream)
         while token == '\n':
-            if self.prompt:
-                self.output.write(self.prompt)
+            if prompt:
+                self.output.write(prompt)
             token = self.next_token(self.stream)
 
         if token == '(':
@@ -107,7 +108,7 @@ class Parser(object):
             # ParseError due to a closing parenthesis
             while True:
                 try:
-                    subexpr = self._get_next_expr()
+                    subexpr = self._get_next_expr(self.prompt2)
                 except ParseError:
                     break
 
@@ -127,7 +128,7 @@ class Parser(object):
     def expressions(self):
         """Return all expressions in stream as generator."""
 
-        expr = self._get_next_expr()
+        expr = self._get_next_expr(self.prompt1)
         while expr is not None:
             yield expr
-            expr = self._get_next_expr()
+            expr = self._get_next_expr(self.prompt1)
