@@ -1,6 +1,6 @@
 import StringIO
 from unittest import TestCase, main
-from parser import Parser, ParseError
+from pysc.parser import Parser, ParseError
 
 class test_parser(TestCase):
     def setUp(self):
