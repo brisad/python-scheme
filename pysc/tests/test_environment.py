@@ -1,5 +1,4 @@
 from unittest import TestCase, main
-from mocker import Mocker
 from pysc.environment import Environment, Procedure, Builtins
 
 def add(operands):
