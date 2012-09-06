@@ -19,11 +19,6 @@ class test_environment(TestCase):
         result = self.env.eval(inp)
         self.assertEqual(outp, result)
 
-    def assert_define_sets_namespace(self, inp, name, contents):
-        result = self.env._define(inp)
-        self.assertEqual(result, None)
-        self.assertEqual(self.env.namespace[name], contents)
-
     def test_eval_numerical_primitive(self):
         self.assert_eval_results(123, 123)
 
@@ -62,6 +57,19 @@ class test_environment(TestCase):
                                               parameters=['x', 'y'])})
         self.assert_eval_results(['func', 1, 2], 23)
 
+
+class test_special_forms(TestCase):
+    def setUp(self):
+        self.env = Environment()
+
+    def set_namespace(self, namespace):
+        self.env.namespace = namespace
+
+    def assert_define_sets_namespace(self, inp, name, contents):
+        result = self.env._define(inp)
+        self.assertEqual(result, None)
+        self.assertEqual(self.env.namespace[name], contents)
+
     def test_define(self):
         self.assert_define_sets_namespace(['x', 42], 'x', 42)
 
@@ -69,12 +77,12 @@ class test_environment(TestCase):
         self.set_namespace({'add': Procedure(add)})
         self.assert_define_sets_namespace(['x', ['add', 1, 2]], 'x', 3)
 
-    def test_define_procedure1(self):
+    def test_define_compound_procedure1(self):
         self.assert_define_sets_namespace(
             [['x', 'param'], 'param'],
             'x', Procedure('param', parameters=['param']))
 
-    def test_define_procedure2(self):
+    def test_define_compound_procedure2(self):
         self.assert_define_sets_namespace(
             [['f', 'x', 'y', 'z'], ['x', 'y', 'z']],
             'f', Procedure(['x', 'y', 'z'], parameters=['x', 'y', 'z']))
@@ -117,6 +125,11 @@ class test_builtins(TestCase):
 
 class test_procedure(TestCase):
     def test_equality_true(self):
+        """Test that identical Procedure objects compares to true.
+
+        Procedures are compared for equality in tests that set the
+        namespace of the environment, containing procedures."""
+
         p1 = Procedure(add)
         p2 = Procedure(add)
         p3 = Procedure(['foo', 'a'], parameters=['a'])
@@ -125,6 +138,11 @@ class test_procedure(TestCase):
         self.assertEqual(p3, p4)
 
     def test_equality_false(self):
+        """Test that different Procedure objects compares to false.
+
+        Procedures are compared for equality in tests that set the
+        namespace of the environment, containing procedures."""
+
         p1 = Procedure(add)
         p2 = Procedure(sum)
         p3 = Procedure(['foo', 'a'], parameters=['a'])
@@ -135,21 +153,27 @@ class test_procedure(TestCase):
         self.assertNotEqual(p4, p5)
 
     def test_apply_python_function(self):
+        """Test primitive procedure, implemented in Python"""
+
         p = Procedure(add)
         result = p.apply(None, [1, 2])
-        self.assertEquals(result, 3)
+        self.assertEqual(result, 3)
 
     def test_apply_combination(self):
+        """Test that a compound procedure is correctly applied."""
+
         e = Environment(namespace={'f': Procedure(add)})
         p = Procedure(['f', 'x', 'y'], parameters=['x', 'y'])
         result = p.apply(e, [1, 2])
-        self.assertEquals(result, 3)
+        self.assertEqual(result, 3)
 
     def test_apply_primitive_body(self):
+        """Test procedure with body only consisting of a primitive."""
+
         e = Environment()
         p = Procedure('x', parameters=['x'])
         result = p.apply(e, [20])
-        self.assertEquals(result, 20)
+        self.assertEqual(result, 20)
 
 
 if __name__ == '__main__':
