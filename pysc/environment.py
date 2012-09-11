@@ -28,7 +28,8 @@ class Environment(object):
             namespace = {}
         if special_forms is None:
             special_forms = {'define': self._define,
-                             'if': self._if}
+                             'if': self._if,
+                             'cond': self._cond}
 
         self.namespace = namespace
         self.special_forms = special_forms
@@ -59,6 +60,17 @@ class Environment(object):
                                              parameters=operands[0][1:])
         else:
             self.namespace[operands[0]] = self.eval(operands[1])
+
+    def _cond(self, operands):
+        index = 0
+        try:
+            while not self.eval(operands[index][0]):
+                index += 1
+        except IndexError:
+            # We will end up here if all predicates evaluate to false
+            pass
+        else:
+            return self.eval(operands[index][1])
 
     def _if(self, operands):
         if self.eval(operands[0]):

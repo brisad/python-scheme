@@ -58,11 +58,20 @@ class test_environment(TestCase):
         self.assert_eval_results(['func', 1, 2], 23)
 
 
+TRUE_VALUE = 'T'
+FALSE_VALUE = 'F'
+VAL1 = 'val1'
+VAL2 = 'val2'
+
 class test_special_forms(TestCase):
+
     def setUp(self):
         self.env = Environment()
+        self.set_namespace({})
 
     def set_namespace(self, namespace):
+        namespace.update({TRUE_VALUE: True, FALSE_VALUE: False,
+                          VAL1: 1, VAL2: 2})
         self.env.namespace = namespace
 
     def assert_define_sets_namespace(self, inp, name, contents):
@@ -70,6 +79,7 @@ class test_special_forms(TestCase):
         self.assertEqual(result, None)
         self.assertEqual(self.env.namespace[name], contents)
 
+    # define
     def test_define(self):
         self.assert_define_sets_namespace(['x', 42], 'x', 42)
 
@@ -86,6 +96,26 @@ class test_special_forms(TestCase):
         self.assert_define_sets_namespace(
             [['f', 'x', 'y', 'z'], ['x', 'y', 'z']],
             'f', Procedure(['x', 'y', 'z'], parameters=['x', 'y', 'z']))
+
+    # cond
+    def test_cond_first_predicate_true(self):
+        result = self.env._cond([[TRUE_VALUE, VAL1], [FALSE_VALUE, VAL2]])
+        self.assertEqual(1, result)
+
+    def test_cond_second_predicate_true(self):
+        result = self.env._cond([[FALSE_VALUE, VAL1], [TRUE_VALUE, VAL2]])
+        self.assertEqual(2, result)
+
+    def test_cond_no_predicate_true(self):
+        # Value of cond is undefined if no predicate evaluates to true
+        result = self.env._cond([[FALSE_VALUE, VAL1], [FALSE_VALUE, VAL2]])
+        # Don't care about result, just don't crash
+        self.assertTrue(True)
+
+    def test_ill_formed_cond_throws_error(self):
+        # Only predicate, no consequent expression.  Make sure some
+        # kind of exception is raised.
+        self.assertRaises(Exception, self.env._cond, ['1'])
 
     def test_if_true(self):
         self.set_namespace({'predicate': 1, 'yes': 2, 'no': 3})
