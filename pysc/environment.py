@@ -99,10 +99,25 @@ class Builtins(object):
         return operands[0] / sum(operands[1:])
 
     @classmethod
+    def greater_than(cls, operands):
+        return operands[0] > operands[1]
+
+    @classmethod
+    def less_than(cls, operands):
+        return operands[0] < operands[1]
+
+    @classmethod
+    def equals(cls, operands):
+        return operands[0] == operands[1]
+
+    @classmethod
     def namespace(cls):
         return {
             '+': Procedure(cls.add),
             '-': Procedure(cls.subtract),
             '*': Procedure(cls.multiply),
-            '/': Procedure(cls.divide)
+            '/': Procedure(cls.divide),
+            '>': Procedure(cls.greater_than),
+            '<': Procedure(cls.less_than),
+            '=': Procedure(cls.equals)
             }

@@ -152,6 +152,24 @@ class test_builtins(TestCase):
         result = Builtins.divide([12, 3, 2])
         self.assertEqual(2, result)
 
+    def test_greater_than(self):
+        result = Builtins.greater_than([4, 3])
+        self.assertTrue(result)
+        result = Builtins.greater_than([4, 4])
+        self.assertFalse(result)
+
+    def test_less_than(self):
+        result = Builtins.less_than([3, 4])
+        self.assertTrue(result)
+        result = Builtins.less_than([4, 4])
+        self.assertFalse(result)
+
+    def test_equals(self):
+        result = Builtins.equals([3, 3])
+        self.assertTrue(result)
+        result = Builtins.equals([3, 4])
+        self.assertFalse(result)
+
 
 class test_procedure(TestCase):
     def test_equality_true(self):
