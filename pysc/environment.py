@@ -64,7 +64,8 @@ class Environment(object):
     def _cond(self, operands):
         index = 0
         try:
-            while not self.eval(operands[index][0]):
+            while operands[index][0] != 'else' \
+                    and not self.eval(operands[index][0]):
                 index += 1
         except IndexError:
             # We will end up here if all predicates evaluate to false

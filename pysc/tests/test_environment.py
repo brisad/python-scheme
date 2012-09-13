@@ -112,6 +112,13 @@ class test_special_forms(TestCase):
         # Don't care about result, just don't crash
         self.assertTrue(True)
 
+    def test_cond_with_else(self):
+        # Even if 'else' is set to False, check that else in a cond
+        # evals to true
+        self.set_namespace({'else': False})
+        result = self.env._cond([[FALSE_VALUE, VAL1], ['else', VAL2]])
+        self.assertEqual(2, result)
+
     def test_ill_formed_cond_throws_error(self):
         # Only predicate, no consequent expression.  Make sure some
         # kind of exception is raised.
