@@ -125,8 +125,11 @@ class test_special_forms(TestCase):
         self.assertRaises(Exception, self.env._cond, ['1'])
 
     def test_if_true(self):
-        self.set_namespace({'predicate': 1, 'yes': 2, 'no': 3})
-        result = self.env._if(['predicate', 'yes', 'no'])
+        result = self.env._if([TRUE_VALUE, VAL1, VAL2])
+        self.assertEqual(result, 1)
+
+    def test_if_false(self):
+        result = self.env._if([FALSE_VALUE, VAL1, VAL2])
         self.assertEqual(result, 2)
 
 
