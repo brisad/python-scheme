@@ -29,7 +29,9 @@ class Environment(object):
         if special_forms is None:
             special_forms = {'define': self._define,
                              'if': self._if,
-                             'cond': self._cond}
+                             'cond': self._cond,
+                             'and': self._and,
+                             'or': self._or}
 
         self.namespace = namespace
         self.special_forms = special_forms
@@ -79,6 +81,30 @@ class Environment(object):
         else:
             return self.eval(operands[2])
 
+    def _and(self, operands):
+        index = 0
+        try:
+            value = self.eval(operands[index])
+            while value:
+                index += 1
+                value = self.eval(operands[index])
+        except IndexError:
+            return value
+        else:
+            return False
+
+    def _or(self, operands):
+        index = 0
+        try:
+            value = self.eval(operands[index])
+            while not value:
+                index += 1
+                value = self.eval(operands[index])
+        except IndexError:
+            return False
+        else:
+            return value
+
 
 class Builtins(object):
     @classmethod
@@ -100,6 +126,10 @@ class Builtins(object):
         return operands[0] / sum(operands[1:])
 
     @classmethod
+    def not_(self, operands):
+        return not operands[0]
+
+    @classmethod
     def greater_than(cls, operands):
         return operands[0] > operands[1]
 
@@ -111,6 +141,7 @@ class Builtins(object):
     def equals(cls, operands):
         return operands[0] == operands[1]
 
+
     @classmethod
     def namespace(cls):
         return {
@@ -118,6 +149,7 @@ class Builtins(object):
             '-': Procedure(cls.subtract),
             '*': Procedure(cls.multiply),
             '/': Procedure(cls.divide),
+            'not': Procedure(cls.not_),
             '>': Procedure(cls.greater_than),
             '<': Procedure(cls.less_than),
             '=': Procedure(cls.equals)

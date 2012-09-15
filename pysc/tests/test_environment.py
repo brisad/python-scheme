@@ -126,11 +126,35 @@ class test_special_forms(TestCase):
 
     def test_if_true(self):
         result = self.env._if([TRUE_VALUE, VAL1, VAL2])
-        self.assertEqual(result, 1)
+        self.assertEqual(1, result)
 
     def test_if_false(self):
         result = self.env._if([FALSE_VALUE, VAL1, VAL2])
-        self.assertEqual(result, 2)
+        self.assertEqual(2, result)
+
+    def test_and_all_true(self):
+        result = self.env._and([TRUE_VALUE, VAL1])
+        self.assertEqual(1, result)
+
+    def test_and_all_false(self):
+        result = self.env._and([FALSE_VALUE, FALSE_VALUE])
+        self.assertEqual(False, result)
+
+    def test_and_one_false(self):
+        result = self.env._and([VAL1, FALSE_VALUE])
+        self.assertEqual(False, result)
+
+    def test_or_all_false(self):
+        result = self.env._or([FALSE_VALUE, FALSE_VALUE])
+        self.assertEqual(False, result)
+
+    def test_or_all_true(self):
+        result = self.env._or([VAL1, TRUE_VALUE])
+        self.assertEqual(1, result)
+
+    def test_or_one_true(self):
+        result = self.env._or([FALSE_VALUE, VAL1])
+        self.assertEqual(1, result)
 
 
 class test_builtins(TestCase):
@@ -161,6 +185,14 @@ class test_builtins(TestCase):
     def test_divide_three_operands(self):
         result = Builtins.divide([12, 3, 2])
         self.assertEqual(2, result)
+
+    def test_not_true(self):
+        result = Builtins.not_([False])
+        self.assertTrue(result)
+
+    def test_not_false(self):
+        result = Builtins.not_([True])
+        self.assertFalse(result)
 
     def test_greater_than(self):
         result = Builtins.greater_than([4, 3])
