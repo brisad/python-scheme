@@ -1,5 +1,46 @@
 import operator
 
+
+class Expression(object):
+    def __init__(self, contents, combination=False):
+        if combination:
+            self.scalar = None
+            self.fields = contents
+        else:
+            self.scalar = contents
+            self.fields = None
+
+    def is_combination(self):
+        return self.fields is not None
+
+    @classmethod
+    def create(self, expr):
+        """Create a Expression object from a list expression.
+
+        Traverse the expression tree expr and create a new tree with
+        Expression objects instead.
+        """
+
+        if isinstance(expr, list):
+            return Expression([self.create(field) for field in expr], True)
+        else:
+            return Expression(expr)
+
+    def __eq__(self, other):
+        try:
+            if self.is_combination() and other.is_combination() and \
+                    len(self.fields) == len(other.fields):
+                return all(x == y for x, y in zip(self.fields, other.fields))
+            elif not self.is_combination() and not other.is_combination():
+                return self.scalar == other.scalar
+        except AttributeError:
+            pass
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 class Procedure(object):
     def __init__(self, function, parameters=None):
         self.function = function

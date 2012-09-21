@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from pysc.environment import Environment, Procedure, Builtins
+from pysc.environment import Environment, Procedure, Expression, Builtins
 
 def add(operands):
     return operands[0] + operands[1]
@@ -56,6 +56,62 @@ class test_environment(TestCase):
                             'func': Procedure(['add', 'x', ['add', 20, 'y']],
                                               parameters=['x', 'y'])})
         self.assert_eval_results(['func', 1, 2], 23)
+
+
+NUMERIC_VAL = 3.14
+STRING_VAL = "Hello"
+
+class test_expression(TestCase):
+    def test_scalar(self):
+        expr = Expression(NUMERIC_VAL)
+        self.assertFalse(expr.is_combination())
+        self.assertEqual(NUMERIC_VAL, expr.scalar)
+
+    def test_scalar_string(self):
+        expr = Expression(STRING_VAL)
+        self.assertFalse(expr.is_combination())
+        self.assertEqual(STRING_VAL, expr.scalar)
+
+    def test_combination(self):
+        expr = Expression([Expression(NUMERIC_VAL),
+                           Expression(STRING_VAL)], True)
+        self.assertTrue(expr.is_combination())
+        self.assertEqual([Expression(NUMERIC_VAL), Expression(STRING_VAL)],
+                         expr.fields)
+
+    def test_combination_one_field(self):
+        expr = Expression([Expression(NUMERIC_VAL)], True)
+        self.assertTrue(expr.is_combination())
+        self.assertEqual([Expression(NUMERIC_VAL)], expr.fields)
+
+    def test_create(self):
+        result = Expression.create([[STRING_VAL], [NUMERIC_VAL]])
+        self.assertEqual(
+            Expression(
+                [Expression([Expression(STRING_VAL)], True),
+                 Expression([Expression(NUMERIC_VAL)], True)], 
+                True),
+                         result)
+
+    def test_equality(self):
+        """Test __eq__ and __ne__ of Expression."""
+
+        expr1 = Expression([NUMERIC_VAL, STRING_VAL])
+        expr2 = Expression([NUMERIC_VAL])
+        expr3 = Expression([NUMERIC_VAL, STRING_VAL])
+        expr4 = Expression(NUMERIC_VAL)
+        expr5 = Expression(NUMERIC_VAL)
+        expr6 = Expression([Expression(NUMERIC_VAL)])
+        self.assertFalse(expr1 == expr2)
+        self.assertTrue(expr1 == expr3)
+        self.assertFalse(expr2 == expr4)
+        self.assertTrue(expr4 == expr5)
+        self.assertFalse(expr2 == expr6)
+        self.assertTrue(expr1 != expr2)
+        self.assertFalse(expr1 != expr3)
+        self.assertTrue(expr2 != expr4)
+        self.assertFalse(expr4 != expr5)
+        self.assertTrue(expr2 != expr6)
 
 
 TRUE_VALUE = 'T'
