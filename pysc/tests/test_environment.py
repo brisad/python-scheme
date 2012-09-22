@@ -5,7 +5,7 @@ def add(operands):
     return operands[0] + operands[1]
 
 def first(x):
-    return x[0]
+    return x[0].scalar
 
 
 class test_environment(TestCase):
@@ -16,7 +16,7 @@ class test_environment(TestCase):
         self.env.namespace = namespace
 
     def assert_eval_results(self, inp, outp):
-        result = self.env.eval(inp)
+        result = self.env.eval(Expression.create(inp))
         self.assertEqual(outp, result)
 
     def test_eval_numerical_primitive(self):
@@ -47,14 +47,16 @@ class test_environment(TestCase):
 
     def test_eval_defined_procedure(self):
         self.set_namespace({'add': Procedure(add),
-                            'func': Procedure(['add', 'x', 'y'],
-                                              parameters=['x', 'y'])})
+                            'func': Procedure(
+                    Expression.create(['add', 'x', 'y']),
+                    parameters=['x', 'y'])})
         self.assert_eval_results(['func', 1, 2], 3)
 
     def test_eval_nested_defined_procedure(self):
         self.set_namespace({'add': Procedure(add),
-                            'func': Procedure(['add', 'x', ['add', 20, 'y']],
-                                              parameters=['x', 'y'])})
+                            'func': Procedure(
+                    Expression.create(['add', 'x', ['add', 20, 'y']]),
+                    parameters=['x', 'y'])})
         self.assert_eval_results(['func', 1, 2], 23)
 
 
@@ -130,41 +132,63 @@ class test_special_forms(TestCase):
                           VAL1: 1, VAL2: 2})
         self.env.namespace = namespace
 
+    def call_special_form(self, special_form, inp):
+        result = special_form(Expression.create(inp).fields)
+        return result
+
+    def assert_special_form_returns(self, special_form, inp, outp):
+        result = self.call_special_form(special_form, inp)
+        self.assertEqual(outp, result)
+
     def assert_define_sets_namespace(self, inp, name, contents):
-        result = self.env._define(inp)
+        result = self.call_special_form(self.env._define, inp)
         self.assertEqual(result, None)
         self.assertEqual(self.env.namespace[name], contents)
 
     # define
     def test_define(self):
-        self.assert_define_sets_namespace(['x', 42], 'x', 42)
+        self.assert_define_sets_namespace(
+            ['x', NUMERIC_VAL],
+            'x',
+            NUMERIC_VAL)
 
     def test_define_evals_argument(self):
         self.set_namespace({'add': Procedure(add)})
-        self.assert_define_sets_namespace(['x', ['add', 1, 2]], 'x', 3)
+        self.assert_define_sets_namespace(['x', ['add', NUMERIC_VAL, NUMERIC_VAL]],
+                                          'x', 2 * NUMERIC_VAL)
 
     def test_define_compound_procedure1(self):
         self.assert_define_sets_namespace(
             [['x', 'param'], 'param'],
-            'x', Procedure('param', parameters=['param']))
+            'x',
+            Procedure(Expression.create('param'),
+                      parameters=['param']))
 
     def test_define_compound_procedure2(self):
         self.assert_define_sets_namespace(
             [['f', 'x', 'y', 'z'], ['x', 'y', 'z']],
-            'f', Procedure(['x', 'y', 'z'], parameters=['x', 'y', 'z']))
+            'f',
+            Procedure(Expression.create(['x', 'y', 'z']),
+                      parameters=['x', 'y', 'z']))
 
     # cond
     def test_cond_first_predicate_true(self):
-        result = self.env._cond([[TRUE_VALUE, VAL1], [FALSE_VALUE, VAL2]])
-        self.assertEqual(1, result)
+        self.assert_special_form_returns(
+            self.env._cond,
+            [[TRUE_VALUE, VAL1], [FALSE_VALUE, VAL2]],
+            1)
 
     def test_cond_second_predicate_true(self):
-        result = self.env._cond([[FALSE_VALUE, VAL1], [TRUE_VALUE, VAL2]])
-        self.assertEqual(2, result)
+        self.assert_special_form_returns(
+            self.env._cond,
+            [[FALSE_VALUE, VAL1], [TRUE_VALUE, VAL2]],
+            2)
 
     def test_cond_no_predicate_true(self):
         # Value of cond is undefined if no predicate evaluates to true
-        result = self.env._cond([[FALSE_VALUE, VAL1], [FALSE_VALUE, VAL2]])
+        self.call_special_form(
+            self.env._cond,
+            [[FALSE_VALUE, VAL1], [FALSE_VALUE, VAL2]])
         # Don't care about result, just don't crash
         self.assertTrue(True)
 
@@ -172,45 +196,48 @@ class test_special_forms(TestCase):
         # Even if 'else' is set to False, check that else in a cond
         # evals to true
         self.set_namespace({'else': False})
-        result = self.env._cond([[FALSE_VALUE, VAL1], ['else', VAL2]])
-        self.assertEqual(2, result)
+        self.assert_special_form_returns(
+            self.env._cond,
+            [[FALSE_VALUE, VAL1], ['else', VAL2]],
+            2)
 
     def test_ill_formed_cond_throws_error(self):
         # Only predicate, no consequent expression.  Make sure some
         # kind of exception is raised.
-        self.assertRaises(Exception, self.env._cond, ['1'])
+        self.assertRaises(Exception,
+                          self.call_special_form, self.env._cond, ['1'])
 
     def test_if_true(self):
-        result = self.env._if([TRUE_VALUE, VAL1, VAL2])
-        self.assertEqual(1, result)
+        self.assert_special_form_returns(
+            self.env._if, [TRUE_VALUE, VAL1, VAL2], 1)
 
     def test_if_false(self):
-        result = self.env._if([FALSE_VALUE, VAL1, VAL2])
-        self.assertEqual(2, result)
+        self.assert_special_form_returns(
+            self.env._if, [FALSE_VALUE, VAL1, VAL2], 2)
 
     def test_and_all_true(self):
-        result = self.env._and([TRUE_VALUE, VAL1])
-        self.assertEqual(1, result)
+        self.assert_special_form_returns(
+            self.env._and, [TRUE_VALUE, VAL1], 1)
 
     def test_and_all_false(self):
-        result = self.env._and([FALSE_VALUE, FALSE_VALUE])
-        self.assertEqual(False, result)
+        self.assert_special_form_returns(
+            self.env._and, [FALSE_VALUE, FALSE_VALUE], False)
 
     def test_and_one_false(self):
-        result = self.env._and([VAL1, FALSE_VALUE])
-        self.assertEqual(False, result)
+        self.assert_special_form_returns(
+            self.env._and, [VAL1, FALSE_VALUE], False)
 
     def test_or_all_false(self):
-        result = self.env._or([FALSE_VALUE, FALSE_VALUE])
-        self.assertEqual(False, result)
+        self.assert_special_form_returns(
+            self.env._or, [FALSE_VALUE, FALSE_VALUE], False)
 
     def test_or_all_true(self):
-        result = self.env._or([VAL1, TRUE_VALUE])
-        self.assertEqual(1, result)
+        self.assert_special_form_returns(
+            self.env._or, [VAL1, TRUE_VALUE], 1)
 
     def test_or_one_true(self):
-        result = self.env._or([FALSE_VALUE, VAL1])
-        self.assertEqual(1, result)
+        self.assert_special_form_returns(
+            self.env._or, [FALSE_VALUE, VAL1], 1)
 
 
 class test_builtins(TestCase):
@@ -309,7 +336,7 @@ class test_procedure(TestCase):
         """Test that a compound procedure is correctly applied."""
 
         e = Environment(namespace={'f': Procedure(add)})
-        p = Procedure(['f', 'x', 'y'], parameters=['x', 'y'])
+        p = Procedure(Expression.create(['f', 'x', 'y']), parameters=['x', 'y'])
         result = p.apply(e, [1, 2])
         self.assertEqual(result, 3)
 
@@ -317,7 +344,7 @@ class test_procedure(TestCase):
         """Test procedure with body only consisting of a primitive."""
 
         e = Environment()
-        p = Procedure('x', parameters=['x'])
+        p = Procedure(Expression.create('x'), parameters=['x'])
         result = p.apply(e, [20])
         self.assertEqual(result, 20)
 

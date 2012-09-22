@@ -1,6 +1,6 @@
 import sys
 from parser import Parser
-from environment import Environment, Builtins
+from environment import Environment, Builtins, Expression
 
 class Interpreter(object):
     def __init__(self, instream=sys.stdin, outstream=sys.stdout,
@@ -17,7 +17,7 @@ class Interpreter(object):
         self.outstream.write(self.prompt1)
         try:
             for expr in self.parser.expressions():
-                print self.environment.eval(expr)
+                print self.environment.eval(Expression.create(expr))
         except KeyboardInterrupt:
             pass
 

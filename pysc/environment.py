@@ -78,73 +78,89 @@ class Environment(object):
         self.special_forms = special_forms
 
     def eval(self, expr):
+        """Evaluate expression.
 
-        if not isinstance(expr, list):
+        Expression is represented by a Expression object.
+        """
+
+        if not expr.is_combination():
             try:
-                result = self.namespace[expr]
+                result = self.namespace[expr.scalar]
             except KeyError:
-                result = expr
+                result = expr.scalar
             return result
 
-        elif expr[0] in self.special_forms:
-            f = self.special_forms[expr[0]]
-            return f(expr[1:])
+        elif expr.fields[0].scalar in self.special_forms:
+            f = self.special_forms[expr.fields[0].scalar]
+            return f(expr.fields[1:])
         else:
             # 1. Evaluate the subexpressions of the combination
-            l = [self.eval(subexpr) for subexpr in expr]
+            l = [self.eval(subexpr) for subexpr in expr.fields]
             # 2. Apply the operator to the operands
             f = l[0]
             return f.apply(self, l[1:])
 
     def _define(self, operands):
-        if isinstance(operands[0], list):
-            name = operands[0][0]
-            self.namespace[name] = Procedure(operands[1],
-                                             parameters=operands[0][1:])
+        """Apply special form 'define' to operands.
+
+        Operands are represented as a list of Expression objects.
+        """
+
+        if operands[0].is_combination():
+            name = operands[0].fields[0].scalar
+            value = Procedure(operands[1],
+                              parameters=[x.scalar for x in
+                                          operands[0].fields[1:]])
         else:
-            self.namespace[operands[0]] = self.eval(operands[1])
+            name = operands[0].scalar
+            value =  self.eval(operands[1])
+        self.namespace[name] = value
 
     def _cond(self, operands):
-        index = 0
-        try:
-            while operands[index][0] != 'else' \
-                    and not self.eval(operands[index][0]):
-                index += 1
-        except IndexError:
-            # We will end up here if all predicates evaluate to false
-            pass
-        else:
-            return self.eval(operands[index][1])
+        """Apply special form 'cond' to operands.
+
+        Operands are represented as a list of Expression objects.
+        """
+
+        for case in operands:
+            if not case.fields[0].is_combination() and \
+                    case.fields[0].scalar == 'else' or \
+                    self.eval(case.fields[0]):
+                return self.eval(case.fields[1])
+        return False
 
     def _if(self, operands):
-        if self.eval(operands[0]):
-            return self.eval(operands[1])
-        else:
-            return self.eval(operands[2])
+        """Apply special form 'if' to operands.
+
+        Operands are represented as a list of Expression objects.
+        """
+
+        return self._cond([Expression([operands[0], operands[1]], True),
+                           Expression([Expression('else'), operands[2]], True)])
 
     def _and(self, operands):
-        index = 0
-        try:
-            value = self.eval(operands[index])
-            while value:
-                index += 1
-                value = self.eval(operands[index])
-        except IndexError:
-            return value
-        else:
-            return False
+        """Apply special form 'and' to operands.
+
+        Operands are represented as a list of Expression objects.
+        """
+
+        for operand in operands:
+            last_val = self.eval(operand)
+            if not last_val:
+                return False
+        return last_val
 
     def _or(self, operands):
-        index = 0
-        try:
-            value = self.eval(operands[index])
-            while not value:
-                index += 1
-                value = self.eval(operands[index])
-        except IndexError:
-            return False
-        else:
-            return value
+        """Apply special form 'or' to operands.
+
+        Operands are represented as a list of Expression objects.
+        """
+
+        for operand in operands:
+            last_val = self.eval(operand)
+            if last_val:
+                return last_val
+        return False
 
 
 class Builtins(object):

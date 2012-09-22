@@ -1,8 +1,9 @@
 import os
 import StringIO
 from itertools import ifilter, imap
-from pysc.environment import Environment, Builtins
+from pysc.environment import Environment, Builtins, Expression
 from pysc.parser import Parser
+
 
 def run_session(filename):
     """Run session test.
@@ -19,7 +20,7 @@ def run_session(filename):
                 num_tests += 1
 
                 for expr in Parser(StringIO.StringIO(line[2:])).expressions():
-                    result = env.eval(expr)
+                    result = env.eval(Expression.create(expr))
                     result = repr(result) if result else ''
 
                 # Got respone, now read next line directly
