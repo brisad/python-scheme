@@ -309,9 +309,11 @@ class test_procedure(TestCase):
         p2 = Procedure(add)
         p3 = Procedure(['foo', 'a'], parameters=['a'])
         p4 = Procedure(['foo', 'a'], parameters=['a'])
-        self.assertEqual(p1, p2)
-        self.assertEqual(p3, p4)
-
+        self.assertTrue(p1 == p2)
+        self.assertTrue(p3 == p4)
+        self.assertFalse(p1 != p2)
+        self.assertFalse(p3 != p4)
+        
     def test_equality_false(self):
         """Test that different Procedure objects compares to false.
 
@@ -323,9 +325,12 @@ class test_procedure(TestCase):
         p3 = Procedure(['foo', 'a'], parameters=['a'])
         p4 = Procedure(['foo', 'a'])
         p5 = Procedure(['bar', 'a'])
-        self.assertNotEqual(p1, p2)
-        self.assertNotEqual(p3, p4)
-        self.assertNotEqual(p4, p5)
+        self.assertTrue(p1 != p2)
+        self.assertTrue(p3 != p4)
+        self.assertTrue(p4 != p5)
+        self.assertFalse(p1 == p2)
+        self.assertFalse(p3 == p4)
+        self.assertFalse(p4 == p5)
 
     def test_apply_python_function(self):
         """Test primitive procedure, implemented in Python"""
