@@ -115,6 +115,7 @@ class Environment(object):
             name = operands[0].scalar
             value =  self.eval(operands[1])
         self.namespace[name] = value
+        return name
 
     def _cond(self, operands):
         """Apply special form 'cond' to operands.

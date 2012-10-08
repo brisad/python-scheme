@@ -142,7 +142,7 @@ class test_special_forms(TestCase):
 
     def assert_define_sets_namespace(self, inp, name, contents):
         result = self.call_special_form(self.env._define, inp)
-        self.assertEqual(result, None)
+        self.assertEqual(result, name)
         self.assertEqual(self.env.namespace[name], contents)
 
     # define
@@ -154,8 +154,10 @@ class test_special_forms(TestCase):
 
     def test_define_evals_argument(self):
         self.set_namespace({'add': Procedure(add)})
-        self.assert_define_sets_namespace(['x', ['add', NUMERIC_VAL, NUMERIC_VAL]],
-                                          'x', 2 * NUMERIC_VAL)
+        self.assert_define_sets_namespace(
+            ['x', ['add', NUMERIC_VAL, NUMERIC_VAL]],
+            'x',
+            2 * NUMERIC_VAL)
 
     def test_define_compound_procedure1(self):
         self.assert_define_sets_namespace(
