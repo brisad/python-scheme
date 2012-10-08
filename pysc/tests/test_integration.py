@@ -14,22 +14,32 @@ def run_session(filename):
     env = Environment(namespace=Builtins.namespace())
     num_tests, num_passed = 0, 0
     with open(filename) as f:
+        input_expression = ""
         # Iterate over non-blank lines
         for line in ifilter(None, imap(str.strip, f)):
             if line.startswith('> '):
+                # Lines are stripped, so add a space to get whitespace
+                # between the lines.
+                input_expression += " " + line[2:]
+            elif input_expression:
+                # We got a line not starting with '> ', this is the
+                # expected result from the preceding input expression
                 num_tests += 1
 
-                for expr in Parser(StringIO.StringIO(line[2:])).expressions():
+                parser = Parser(StringIO.StringIO(input_expression))
+                for expr in parser.expressions():
                     result = env.eval(Expression.create(expr))
                     result = repr(result) if result else ''
 
-                # Got respone, now read next line directly
-                expected = next(f).rstrip('\n')
+                expected = line.rstrip('\n')
                 if result != expected:
                     print 'Failure: "%s" != "%s"' % (result, expected)
                 else:
                     num_passed += 1
+                input_expression = ""
             else:
+                # If we got a non-empty line without an input
+                # expression something is wrong
                 print 'Unexpected line: "%s"' % line
     print "{:20} Ran {} tests, {} passed".format(os.path.basename(filename),
                                                  num_tests, num_passed)
