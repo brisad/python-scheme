@@ -1,6 +1,11 @@
 import operator
 
 
+class TailRecursion(Exception):
+    def __init__(self, next_args):
+        self.next_args = next_args
+
+
 class Expression(object):
     def __init__(self, contents, combination=False):
         if combination:
@@ -50,9 +55,16 @@ class Procedure(object):
         try:
             result = self.function(args)
         except TypeError:
-            proc_env = Environment(namespace=dict(env.namespace))
-            proc_env.namespace.update(zip(self.parameters, args))
-            result = proc_env.eval(self.function)
+            proc_env = Environment(namespace=dict(env.namespace), creator=self)
+            while True:
+                proc_env.namespace.update(zip(self.parameters, args))
+                try:
+                    result = proc_env.eval(self.function)
+                except TailRecursion as tr:
+                    args = tr.next_args
+                else:
+                    break
+
         return result
 
     def __eq__(self, other):
@@ -64,7 +76,7 @@ class Procedure(object):
 
 
 class Environment(object):
-    def __init__(self, namespace=None, special_forms=None):
+    def __init__(self, namespace=None, special_forms=None, creator=None):
         if namespace is None:
             namespace = {}
         if special_forms is None:
@@ -76,8 +88,9 @@ class Environment(object):
 
         self.namespace = namespace
         self.special_forms = special_forms
+        self.creator = creator
 
-    def eval(self, expr):
+    def eval(self, expr, calldepth=0):
         """Evaluate expression.
 
         Expression is represented by a Expression object.
@@ -95,9 +108,11 @@ class Environment(object):
             return f(expr.fields[1:])
         else:
             # 1. Evaluate the subexpressions of the combination
-            l = [self.eval(subexpr) for subexpr in expr.fields]
+            l = [self.eval(subexpr, calldepth+1) for subexpr in expr.fields]
             # 2. Apply the operator to the operands
             f = l[0]
+            if self.creator is f and calldepth == 0:
+                raise TailRecursion(l[1:])
             return f.apply(self, l[1:])
 
     def _define(self, operands):
