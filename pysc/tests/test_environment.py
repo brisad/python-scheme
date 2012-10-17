@@ -1,5 +1,6 @@
 from unittest import TestCase, main
-from pysc.environment import Environment, Procedure, Expression, Builtins
+from pysc.environment import Environment, Procedure, BuiltinProcedure, \
+    Expression, Builtins
 
 def add(operands):
     return operands[0] + operands[1]
@@ -34,11 +35,11 @@ class test_environment(TestCase):
         self.assert_eval_results('add', add)
 
     def test_eval_combination(self):
-        self.set_namespace({'add': Procedure(add), 'var': 123})
+        self.set_namespace({'add': BuiltinProcedure(add), 'var': 123})
         self.assert_eval_results(['add', 'var', 456], 579)
 
     def test_eval_nested_combination(self):
-        self.set_namespace({'add': Procedure(add), 'var': 123})
+        self.set_namespace({'add': BuiltinProcedure(add), 'var': 123})
         self.assert_eval_results(['add', 'var', ['add', 1, 2]], 126)
 
     def test_eval_special_form(self):
@@ -46,14 +47,14 @@ class test_environment(TestCase):
         self.assert_eval_results(['first', 'var'], 'var')
 
     def test_eval_defined_procedure(self):
-        self.set_namespace({'add': Procedure(add),
+        self.set_namespace({'add': BuiltinProcedure(add),
                             'func': Procedure(
                     Expression.create(['add', 'x', 'y']),
                     parameters=['x', 'y'])})
         self.assert_eval_results(['func', 1, 2], 3)
 
     def test_eval_nested_defined_procedure(self):
-        self.set_namespace({'add': Procedure(add),
+        self.set_namespace({'add': BuiltinProcedure(add),
                             'func': Procedure(
                     Expression.create(['add', 'x', ['add', 20, 'y']]),
                     parameters=['x', 'y'])})
@@ -153,7 +154,7 @@ class test_special_forms(TestCase):
             NUMERIC_VAL)
 
     def test_define_evals_argument(self):
-        self.set_namespace({'add': Procedure(add)})
+        self.set_namespace({'add': BuiltinProcedure(add)})
         self.assert_define_sets_namespace(
             ['x', ['add', NUMERIC_VAL, NUMERIC_VAL]],
             'x',
@@ -299,6 +300,17 @@ class test_builtins(TestCase):
 
 
 class test_procedure(TestCase):
+    def setUp(self):
+        self.env = Environment()
+
+    def set_namespace(self, namespace):
+        self.env.namespace = namespace
+
+    def assert_procedure_results(self, procedure, parameters, args, outp):
+        p = Procedure(Expression.create(procedure), parameters)
+        result = p.apply(self.env, args)
+        self.assertEqual(result, outp)
+
     def test_equality_true(self):
         """Test that identical Procedure objects compares to true.
 
@@ -332,28 +344,26 @@ class test_procedure(TestCase):
         self.assertFalse(p3 == p4)
         self.assertFalse(p4 == p5)
 
-    def test_apply_python_function(self):
-        """Test primitive procedure, implemented in Python"""
-
-        p = Procedure(add)
-        result = p.apply(None, [1, 2])
-        self.assertEqual(result, 3)
-
     def test_apply_combination(self):
         """Test that a compound procedure is correctly applied."""
 
-        e = Environment(namespace={'f': Procedure(add)})
-        p = Procedure(Expression.create(['f', 'x', 'y']), parameters=['x', 'y'])
-        result = p.apply(e, [1, 2])
-        self.assertEqual(result, 3)
+        self.set_namespace({'f': BuiltinProcedure(add)})
+        self.assert_procedure_results(['f', 'x', 'y'], ['x', 'y'],
+                                      [1, 2], 3)
 
     def test_apply_primitive_body(self):
         """Test procedure with body only consisting of a primitive."""
 
-        e = Environment()
-        p = Procedure(Expression.create('x'), parameters=['x'])
-        result = p.apply(e, [20])
-        self.assertEqual(result, 20)
+        self.assert_procedure_results('x', ['x'], [20], 20)
+
+
+class test_builtin_procedure(TestCase):
+    def test_builtin_python_function(self):
+        """Test primitive procedure, implemented in Python"""
+
+        p = BuiltinProcedure(add)
+        result = p.apply(None, [1, 2])
+        self.assertEqual(result, 3)
 
 
 if __name__ == '__main__':

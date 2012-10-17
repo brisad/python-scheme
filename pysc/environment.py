@@ -52,18 +52,15 @@ class Procedure(object):
         self.parameters = parameters
 
     def apply(self, env, args):
-        try:
-            result = self.function(args)
-        except TypeError:
-            proc_env = Environment(namespace=dict(env.namespace), creator=self)
-            while True:
-                proc_env.namespace.update(zip(self.parameters, args))
-                try:
-                    result = proc_env.eval(self.function)
-                except TailRecursion as tr:
-                    args = tr.next_args
-                else:
-                    break
+        proc_env = Environment(namespace=dict(env.namespace), creator=self)
+        while True:
+            proc_env.namespace.update(zip(self.parameters, args))
+            try:
+                result = proc_env.eval(self.function)
+            except TailRecursion as tr:
+                args = tr.next_args
+            else:
+                break
 
         return result
 
@@ -73,6 +70,11 @@ class Procedure(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+class BuiltinProcedure(Procedure):
+    def apply(self, env, args):
+        return self.function(args)
 
 
 class Environment(object):
@@ -218,12 +220,12 @@ class Builtins(object):
     @classmethod
     def namespace(cls):
         return {
-            '+': Procedure(cls.add),
-            '-': Procedure(cls.subtract),
-            '*': Procedure(cls.multiply),
-            '/': Procedure(cls.divide),
-            'not': Procedure(cls.not_),
-            '>': Procedure(cls.greater_than),
-            '<': Procedure(cls.less_than),
-            '=': Procedure(cls.equals)
+            '+': BuiltinProcedure(cls.add),
+            '-': BuiltinProcedure(cls.subtract),
+            '*': BuiltinProcedure(cls.multiply),
+            '/': BuiltinProcedure(cls.divide),
+            'not': BuiltinProcedure(cls.not_),
+            '>': BuiltinProcedure(cls.greater_than),
+            '<': BuiltinProcedure(cls.less_than),
+            '=': BuiltinProcedure(cls.equals)
             }
