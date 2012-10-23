@@ -49,14 +49,14 @@ class test_environment(TestCase):
     def test_eval_defined_procedure(self):
         self.set_namespace({'add': BuiltinProcedure(add),
                             'func': Procedure(
-                    Expression.create(['add', 'x', 'y']),
+                    [Expression.create(['add', 'x', 'y'])],
                     parameters=['x', 'y'])})
         self.assert_eval_results(['func', 1, 2], 3)
 
     def test_eval_nested_defined_procedure(self):
         self.set_namespace({'add': BuiltinProcedure(add),
                             'func': Procedure(
-                    Expression.create(['add', 'x', ['add', 20, 'y']]),
+                    [Expression.create(['add', 'x', ['add', 20, 'y']])],
                     parameters=['x', 'y'])})
         self.assert_eval_results(['func', 1, 2], 23)
 
@@ -164,14 +164,14 @@ class test_special_forms(TestCase):
         self.assert_define_sets_namespace(
             [['x', 'param'], 'param'],
             'x',
-            Procedure(Expression.create('param'),
+            Procedure([Expression.create('param')],
                       parameters=['param']))
 
     def test_define_compound_procedure2(self):
         self.assert_define_sets_namespace(
             [['f', 'x', 'y', 'z'], ['x', 'y', 'z']],
             'f',
-            Procedure(Expression.create(['x', 'y', 'z']),
+            Procedure([Expression.create(['x', 'y', 'z'])],
                       parameters=['x', 'y', 'z']))
 
     # cond
@@ -307,7 +307,13 @@ class test_procedure(TestCase):
         self.env.namespace = namespace
 
     def assert_procedure_results(self, procedure, parameters, args, outp):
-        p = Procedure(Expression.create(procedure), parameters)
+        """Assert procedure returns expected results.
+
+        Call scheme procedure defined by procedure, with parameters
+        set to args.  Assert return value is equal to outp.
+        """
+
+        p = Procedure([Expression.create(p) for p in procedure], parameters)
         result = p.apply(self.env, args)
         self.assertEqual(result, outp)
 
@@ -319,8 +325,8 @@ class test_procedure(TestCase):
 
         p1 = Procedure(add)
         p2 = Procedure(add)
-        p3 = Procedure(['foo', 'a'], parameters=['a'])
-        p4 = Procedure(['foo', 'a'], parameters=['a'])
+        p3 = Procedure([['foo', 'a']], parameters=['a'])
+        p4 = Procedure([['foo', 'a']], parameters=['a'])
         self.assertTrue(p1 == p2)
         self.assertTrue(p3 == p4)
         self.assertFalse(p1 != p2)
@@ -334,9 +340,9 @@ class test_procedure(TestCase):
 
         p1 = Procedure(add)
         p2 = Procedure(sum)
-        p3 = Procedure(['foo', 'a'], parameters=['a'])
-        p4 = Procedure(['foo', 'a'])
-        p5 = Procedure(['bar', 'a'])
+        p3 = Procedure([['foo', 'a']], parameters=['a'])
+        p4 = Procedure([['foo', 'a']])
+        p5 = Procedure([['bar', 'a']])
         self.assertTrue(p1 != p2)
         self.assertTrue(p3 != p4)
         self.assertTrue(p4 != p5)
@@ -348,13 +354,18 @@ class test_procedure(TestCase):
         """Test that a compound procedure is correctly applied."""
 
         self.set_namespace({'f': BuiltinProcedure(add)})
-        self.assert_procedure_results(['f', 'x', 'y'], ['x', 'y'],
+        self.assert_procedure_results([['f', 'x', 'y']], ['x', 'y'],
                                       [1, 2], 3)
 
     def test_apply_primitive_body(self):
         """Test procedure with body only consisting of a primitive."""
 
-        self.assert_procedure_results('x', ['x'], [20], 20)
+        self.assert_procedure_results(['x'], ['x'], [20], 20)
+
+    def test_apply_list_of_expressions(self):
+        """Test procedure with more than one expression."""
+
+        self.assert_procedure_results(['x', 2], ['x'], [1], 2)
 
 
 class test_builtin_procedure(TestCase):

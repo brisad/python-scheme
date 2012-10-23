@@ -55,8 +55,10 @@ class Procedure(object):
         proc_env = Environment(namespace=dict(env.namespace), creator=self)
         while True:
             proc_env.namespace.update(zip(self.parameters, args))
+            for f in self.function[:-1]:
+                proc_env.eval(f, tail_allowed=False)
             try:
-                result = proc_env.eval(self.function)
+                result = proc_env.eval(self.function[-1], tail_allowed=True)
             except TailRecursion as tr:
                 args = tr.next_args
             else:
@@ -91,12 +93,21 @@ class Environment(object):
         self.namespace = namespace
         self.special_forms = special_forms
         self.creator = creator
+        self.tail_allowed = False
 
-    def eval(self, expr, calldepth=0):
+    def eval(self, expr, calldepth=0, tail_allowed=None):
         """Evaluate expression.
 
         Expression is represented by a Expression object.
         """
+
+        # Save tail recursion allowed state in object and change it
+        # only if is is explicitly passed in with the call.  By
+        # remembering its state, it is unneccessary to pass it on with
+        # every call to eval in special forms, which will keep the
+        # code more readable.
+        if tail_allowed is not None:
+            self.tail_allowed = tail_allowed
 
         if not expr.is_combination():
             try:
@@ -113,7 +124,7 @@ class Environment(object):
             l = [self.eval(subexpr, calldepth+1) for subexpr in expr.fields]
             # 2. Apply the operator to the operands
             f = l[0]
-            if self.creator is f and calldepth == 0:
+            if self.tail_allowed and self.creator is f and calldepth == 0:
                 raise TailRecursion(l[1:])
             return f.apply(self, l[1:])
 
@@ -125,7 +136,7 @@ class Environment(object):
 
         if operands[0].is_combination():
             name = operands[0].fields[0].scalar
-            value = Procedure(operands[1],
+            value = Procedure(operands[1:],
                               parameters=[x.scalar for x in
                                           operands[0].fields[1:]])
         else:
