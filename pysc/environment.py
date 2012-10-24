@@ -155,7 +155,9 @@ class Environment(object):
             if not case.fields[0].is_combination() and \
                     case.fields[0].scalar == 'else' or \
                     self.eval(case.fields[0]):
-                return self.eval(case.fields[1])
+                for expr in case.fields[1:-1]:
+                    self.eval(expr, tail_allowed=False)
+                return self.eval(case.fields[-1])
         return False
 
     def _if(self, operands):

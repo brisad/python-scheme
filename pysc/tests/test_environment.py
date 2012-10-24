@@ -204,6 +204,12 @@ class test_special_forms(TestCase):
             [[FALSE_VALUE, VAL1], ['else', VAL2]],
             2)
 
+    def test_cond_with_list_of_expressions(self):
+        self.assert_special_form_returns(
+            self.env._cond,
+            [[TRUE_VALUE, VAL1, VAL2]],
+            2)
+
     def test_ill_formed_cond_throws_error(self):
         # Only predicate, no consequent expression.  Make sure some
         # kind of exception is raised.
