@@ -1,12 +1,23 @@
 import sys
 import re
+from environment import Expression
+
 
 class ParseError(Exception):
     pass
 
-class Parser(object):
 
-    def __init__(self, stream=None, output=None, prompt1=None, prompt2=None):
+class Parser(object):
+    """Parse character streams into Expressions"""
+
+    def __init__(self, stream, output=None, prompt1=None, prompt2=None):
+        """Create parser connected to specified stream.
+
+        output -- stream to output prompt on (default None)
+        prompt1 -- prompt for each new expression (default None)
+        prompt2 -- prompt for unfinished expressions (default None)
+        """
+
         self.push_back = None
         self.stream = stream
         self.output = output
@@ -19,8 +30,11 @@ class Parser(object):
         except ValueError:
             return primitive
 
-    def next_token(self, stream):
-        """Return next token from stream."""
+    def next_token(self):
+        """Return next token from stream as a string.
+
+        At end-of-stream, return None.
+        """
 
         # If there's a character in self.push_back, use it.  Otherwise
         # read the next one from the stream.
@@ -28,13 +42,13 @@ class Parser(object):
             c = self.push_back
             self.push_back = None
         else:
-            c = stream.read(1)
+            c = self.stream.read(1)
 
         # Read up until the first non-whitespace character, but
         # exclude newlines from characters to skip, as they will be
         # returned as tokens.  This is to aid interactive terminals.
         while c.isspace() and c != '\n':
-            c = stream.read(1)
+            c = self.stream.read(1)
 
         # Parentheses and newlines are special, return them
         # immediately if found.
@@ -46,30 +60,33 @@ class Parser(object):
             # found
             while not c.isspace() and len(c) > 0 and c != '(' and c != ')':
                 token += c
-                c = stream.read(1)
+                c = self.stream.read(1)
             # Push next character back so that it will be read at next
             # call
             self.push_back = c
 
-        token = self._convert(token)
         return token if token != '' else None
 
     def _get_next_expr(self, prompt):
         """Return next expression from input stream.
 
-        If set, output prompt on output stream everytime a newline is
-        encountered in the input."""
+        Returns an instance of Expression, or None if end-of-stream is
+        encountered.
 
-        expr = []
-        token = self.next_token(self.stream)
+        If a prompt is passed as argument, output it on output stream
+        everytime a newline is encountered in the input.
+        """
+
+        token = self.next_token()
         while token == '\n':
             if prompt:
                 self.output.write(prompt)
-            token = self.next_token(self.stream)
+            token = self.next_token()
 
         if token == '(':
             # Find all subexpressions, continue until we get a
             # ParseError due to a closing parenthesis
+            comb = []
             while True:
                 try:
                     subexpr = self._get_next_expr(self.prompt2)
@@ -79,18 +96,23 @@ class Parser(object):
                 if subexpr is None:
                     # Reached EOF
                     raise ParseError("Unexpected: EOF")
-                expr.append(subexpr)
+                comb.append(subexpr)
+            # Convert list of expressions into an Expression object
+            # which is a combination
+            expr = Expression(comb, combination=True)
 
         elif token == ')':
             # A single closing parenthesis is an invalid expression
             raise ParseError("Unexpected: ')'")
+        elif token is None:
+            expr = None
         else:
-            expr = token
+            expr = Expression(self._convert(token), combination=False)
 
         return expr
 
     def expressions(self):
-        """Return all expressions in stream as generator."""
+        """Return all expressions in stream as a generator."""
 
         expr = self._get_next_expr(self.prompt1)
         while expr is not None:

@@ -2,6 +2,7 @@ import sys
 from parser import Parser
 from environment import Environment, Builtins, Expression
 
+
 class Interpreter(object):
 
     """This class holds references to input and output streams and
@@ -59,7 +60,7 @@ class Interpreter(object):
             self.outstream.write(self.prompt1)
         try:
             for expr in self.parser.expressions():
-                print self.environment.eval(Expression.create(expr))
+                print self.environment.eval(expr)
         except KeyboardInterrupt:
             pass
 

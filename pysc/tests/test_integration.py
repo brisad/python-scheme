@@ -28,7 +28,7 @@ def run_session(filename):
 
                 parser = Parser(StringIO.StringIO(input_expression))
                 for expr in parser.expressions():
-                    result = env.eval(Expression.create(expr))
+                    result = env.eval(expr)
                     result = repr(result) if result is not None else ''
 
                 expected = line.rstrip('\n')

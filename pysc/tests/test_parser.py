@@ -1,6 +1,8 @@
 import StringIO
 from unittest import TestCase, main
 from pysc.parser import Parser, ParseError
+from pysc.environment import Expression
+
 
 class test_parser(TestCase):
     def list_expressions(self, inp):
@@ -10,10 +12,11 @@ class test_parser(TestCase):
         return list(result)
 
     def assert_expressions_results(self, inp, outp):
-        self.assertEqual(outp, self.list_expressions(inp)[0])
+        self.assertEqual(Expression.create(outp), self.list_expressions(inp)[0])
 
     def assert_expressions_results_all(self, inp, outp):
-        self.assertEqual(outp, self.list_expressions(inp))
+        self.assertEqual(Expression.create(outp).fields,
+                         self.list_expressions(inp))
 
     def assert_expressions_none(self, inp):
         self.assertEqual(0, len(self.list_expressions(inp)))
@@ -40,16 +43,17 @@ class test_parser(TestCase):
         self.assert_expressions_results('3.14', 3.14)
 
     def test_expressions_combination(self):
-        self.assert_expressions_results('(symbol 42 3.14)', ['symbol', 42, 3.14])
+        self.assert_expressions_results('(symbol 42 3.14)',
+                                        ['symbol', 42, 3.14])
 
     def test_expressions_nested_combination(self):
         self.assert_expressions_results('(symbol (42 (3.14) 0))',
-                                      ['symbol', [42, [3.14], 0]])
+                                        ['symbol', [42, [3.14], 0]])
 
     def test_expressions_complex(self):
         self.assert_expressions_results('(a-b - + a+b .( a  b c)(.9 o/ /))',
-                                      ['a-b', '-', '+', 'a+b', '.',
-                                       ['a', 'b', 'c'], [.9, 'o/', '/']])
+                                        ['a-b', '-', '+', 'a+b', '.',
+                                         ['a', 'b', 'c'], [.9, 'o/', '/']])
 
     def test_expressions_multiple(self):
         self.assert_expressions_results_all('(a) b (c)', [['a'], 'b', ['c']])
