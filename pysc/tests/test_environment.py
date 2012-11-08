@@ -2,6 +2,7 @@ from unittest import TestCase, main
 from pysc.environment import Environment, Procedure, BuiltinProcedure, \
     Expression, Builtins
 
+
 def add(operands):
     return operands[0] + operands[1]
 
@@ -68,6 +69,7 @@ class test_expression(TestCase):
     def test_scalar(self):
         expr = Expression(NUMERIC_VAL)
         self.assertFalse(expr.is_combination())
+        self.assertTrue(expr.is_name())
         self.assertEqual(NUMERIC_VAL, expr.scalar)
 
     def test_scalar_string(self):
@@ -75,15 +77,23 @@ class test_expression(TestCase):
         self.assertFalse(expr.is_combination())
         self.assertEqual(STRING_VAL, expr.scalar)
 
+    def test_name(self):
+        expr = Expression(STRING_VAL, type_=Expression.NAME)
+        self.assertTrue(expr.is_name())
+        self.assertFalse(expr.is_combination())
+        self.assertEqual(STRING_VAL, expr.scalar)
+
     def test_combination(self):
         expr = Expression([Expression(NUMERIC_VAL),
-                           Expression(STRING_VAL)], True)
+                           Expression(STRING_VAL)],
+                          type_=Expression.COMBINATION)
         self.assertTrue(expr.is_combination())
         self.assertEqual([Expression(NUMERIC_VAL), Expression(STRING_VAL)],
                          expr.fields)
 
     def test_combination_one_field(self):
-        expr = Expression([Expression(NUMERIC_VAL)], True)
+        expr = Expression([Expression(NUMERIC_VAL)],
+                          type_=Expression.COMBINATION)
         self.assertTrue(expr.is_combination())
         self.assertEqual([Expression(NUMERIC_VAL)], expr.fields)
 
@@ -91,10 +101,12 @@ class test_expression(TestCase):
         result = Expression.create([[STRING_VAL], [NUMERIC_VAL]])
         self.assertEqual(
             Expression(
-                [Expression([Expression(STRING_VAL)], True),
-                 Expression([Expression(NUMERIC_VAL)], True)], 
-                True),
-                         result)
+                [Expression([Expression(STRING_VAL)],
+                            type_=Expression.COMBINATION),
+                 Expression([Expression(NUMERIC_VAL)],
+                            type_=Expression.COMBINATION)],
+                type_=Expression.COMBINATION),
+            result)
 
     def test_equality(self):
         """Test __eq__ and __ne__ of Expression."""

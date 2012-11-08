@@ -99,7 +99,7 @@ class Parser(object):
                 comb.append(subexpr)
             # Convert list of expressions into an Expression object
             # which is a combination
-            expr = Expression(comb, combination=True)
+            expr = Expression(comb, type_=Expression.COMBINATION)
 
         elif token == ')':
             # A single closing parenthesis is an invalid expression
@@ -107,7 +107,7 @@ class Parser(object):
         elif token is None:
             expr = None
         else:
-            expr = Expression(self._convert(token), combination=False)
+            expr = Expression(self._convert(token))
 
         return expr
 

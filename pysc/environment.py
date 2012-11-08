@@ -7,16 +7,33 @@ class TailRecursion(Exception):
 
 
 class Expression(object):
-    def __init__(self, contents, combination=False):
-        if combination:
-            self.scalar = None
-            self.fields = contents
-        else:
-            self.scalar = contents
-            self.fields = None
+
+    """Store expressions
+
+    Expressions can be of different types, where the actual type
+    together with the contents is set at instantiation.
+
+    Public methods:
+    is_combination() -- return True if expression is a combination
+    is_name() -- return True if expression is a name
+
+    Instance variables:
+    type_ -- type of expression
+    fields -- contents of expression if type is a combination
+    scalar -- contents of expression if type is a name
+    """
+
+    NAME, COMBINATION = range(2)
+    def __init__(self, contents, type_=NAME):
+        self.type_ = type_
+        self.fields = contents
+        self.scalar = contents
 
     def is_combination(self):
-        return self.fields is not None
+        return self.type_ == self.COMBINATION
+
+    def is_name(self):
+        return self.type_ == self.NAME
 
     @classmethod
     def create(self, expr):
@@ -27,7 +44,8 @@ class Expression(object):
         """
 
         if isinstance(expr, list):
-            return Expression([self.create(field) for field in expr], True)
+            return Expression([self.create(field) for field in expr],
+                              type_=self.COMBINATION)
         else:
             return Expression(expr)
 
