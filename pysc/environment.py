@@ -14,26 +14,30 @@ class Expression(object):
     together with the contents is set at instantiation.
 
     Public methods:
-    is_combination() -- return True if expression is a combination
+    is_constant() -- return True if expression is a constant
     is_name() -- return True if expression is a name
+    is_combination() -- return True if expression is a combination
 
     Instance variables:
     type_ -- type of expression
     fields -- contents of expression if type is a combination
-    scalar -- contents of expression if type is a name
+    scalar -- contents of expression if type is a constant or name
     """
 
-    NAME, COMBINATION = range(2)
+    CONSTANT, NAME, COMBINATION = range(3)
     def __init__(self, contents, type_=NAME):
         self.type_ = type_
         self.fields = contents
         self.scalar = contents
 
-    def is_combination(self):
-        return self.type_ == self.COMBINATION
+    def is_constant(self):
+        return self.type_ == self.CONSTANT
 
     def is_name(self):
         return self.type_ == self.NAME
+
+    def is_combination(self):
+        return self.type_ == self.COMBINATION
 
     @classmethod
     def create(self, expr):

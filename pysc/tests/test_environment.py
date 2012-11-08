@@ -83,6 +83,13 @@ class test_expression(TestCase):
         self.assertFalse(expr.is_combination())
         self.assertEqual(STRING_VAL, expr.scalar)
 
+    def test_constant(self):
+        expr = Expression(NUMERIC_VAL, type_=Expression.CONSTANT)
+        self.assertTrue(expr.is_constant())
+        self.assertFalse(expr.is_name())
+        self.assertFalse(expr.is_combination())
+        self.assertEqual(NUMERIC_VAL, expr.scalar)
+
     def test_combination(self):
         expr = Expression([Expression(NUMERIC_VAL),
                            Expression(STRING_VAL)],
