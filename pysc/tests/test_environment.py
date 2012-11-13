@@ -124,16 +124,19 @@ class test_expression(TestCase):
         expr4 = Expression(NUMERIC_VAL)
         expr5 = Expression(NUMERIC_VAL)
         expr6 = Expression([Expression(NUMERIC_VAL)])
+        expr7 = Expression(NUMERIC_VAL, Expression.CONSTANT)
         self.assertFalse(expr1 == expr2)
         self.assertTrue(expr1 == expr3)
         self.assertFalse(expr2 == expr4)
         self.assertTrue(expr4 == expr5)
         self.assertFalse(expr2 == expr6)
+        self.assertFalse(expr4 == expr7)
         self.assertTrue(expr1 != expr2)
         self.assertFalse(expr1 != expr3)
         self.assertTrue(expr2 != expr4)
         self.assertFalse(expr4 != expr5)
         self.assertTrue(expr2 != expr6)
+        self.assertTrue(expr4 != expr7)
 
 
 TRUE_VALUE = 'T'

@@ -55,14 +55,17 @@ class Expression(object):
 
     def __eq__(self, other):
         try:
-            if self.is_combination() and other.is_combination() and \
-                    len(self.fields) == len(other.fields):
-                return all(x == y for x, y in zip(self.fields, other.fields))
-            elif not self.is_combination() and not other.is_combination():
-                return self.scalar == other.scalar
+            if self.type_ != other.type_:
+                return False
         except AttributeError:
-            pass
-        return False
+            # This exception will be raised if we are comparing with
+            # an object that doesn't have the type_ attribute.
+            return False
+
+        if self.is_combination() and len(self.fields) == len(other.fields):
+            return all(x == y for x, y in zip(self.fields, other.fields))
+        else:
+            return self.scalar == other.scalar
 
     def __ne__(self, other):
         return not self.__eq__(other)
