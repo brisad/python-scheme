@@ -152,17 +152,6 @@ class test_expression(TestCase):
         self.assertTrue(expr.is_combination())
         self.assertEqual([Expression(NUMERIC_VAL)], expr.fields)
 
-    def test_create(self):
-        result = Expression.create([[STRING_VAL], [NUMERIC_VAL]])
-        self.assertEqual(
-            Expression(
-                [Expression([Expression(STRING_VAL)],
-                            type_=Expression.COMBINATION),
-                 Expression([Expression(NUMERIC_VAL)],
-                            type_=Expression.COMBINATION)],
-                type_=Expression.COMBINATION),
-            result)
-
     def test_equality(self):
         """Test __eq__ and __ne__ of Expression."""
 

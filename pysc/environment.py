@@ -43,20 +43,6 @@ class Expression(object):
     def is_combination(self):
         return self.type_ == self.COMBINATION
 
-    @classmethod
-    def create(self, expr):
-        """Create a Expression object from a list expression.
-
-        Traverse the expression tree expr and create a new tree with
-        Expression objects instead.
-        """
-
-        if isinstance(expr, list):
-            return Expression([self.create(field) for field in expr],
-                              type_=self.COMBINATION)
-        else:
-            return Expression(expr)
-
     def __eq__(self, other):
         try:
             if self.type_ != other.type_:
