@@ -1,8 +1,7 @@
 import StringIO
 from unittest import TestCase, main
 from pysc.parser import Parser, ParseError
-from pysc.environment import Expression
-
+from pysc.environment import Expression as E
 
 class test_parser(TestCase):
     def list_expressions(self, inp):
@@ -12,11 +11,10 @@ class test_parser(TestCase):
         return list(result)
 
     def assert_expressions_results(self, inp, outp):
-        self.assertEqual(Expression.create(outp), self.list_expressions(inp)[0])
+        self.assertEqual(outp, self.list_expressions(inp)[0])
 
     def assert_expressions_results_all(self, inp, outp):
-        self.assertEqual(Expression.create(outp).fields,
-                         self.list_expressions(inp))
+        self.assertEqual(outp, self.list_expressions(inp))
 
     def assert_expressions_none(self, inp):
         self.assertEqual(0, len(self.list_expressions(inp)))
@@ -28,35 +26,57 @@ class test_parser(TestCase):
         self.assert_expressions_none('')
 
     def test_expressions_symbol(self):
-        self.assert_expressions_results('symbol', 'symbol')
+        self.assert_expressions_results('symbol', E('symbol', E.NAME))
 
     def test_expressions_symbol_with_whitespace(self):
-        self.assert_expressions_results(' symbol ', 'symbol')
+        self.assert_expressions_results(' symbol ', E('symbol', E.NAME))
 
     def test_expressions_integer(self):
-        self.assert_expressions_results('42', 42)
+        self.assert_expressions_results('42', E(42, E.CONSTANT))
 
     def test_expressions_zero(self):
-        self.assert_expressions_results('0', 0)
+        self.assert_expressions_results('0', E(0, E.CONSTANT))
 
     def test_expressions_float(self):
-        self.assert_expressions_results('3.14', 3.14)
+        self.assert_expressions_results('3.14', E(3.14, E.CONSTANT))
 
     def test_expressions_combination(self):
-        self.assert_expressions_results('(symbol 42 3.14)',
-                                        ['symbol', 42, 3.14])
+        self.assert_expressions_results(
+            '(symbol 42 3.14)',
+            E([E('symbol', E.NAME),
+               E(42, E.CONSTANT),
+               E(3.14, E.CONSTANT)],
+              E.COMBINATION))
 
     def test_expressions_nested_combination(self):
-        self.assert_expressions_results('(symbol (42 (3.14) 0))',
-                                        ['symbol', [42, [3.14], 0]])
+        self.assert_expressions_results(
+            '(symbol (42 (3.14) 0))',
+            E([E('symbol', E.NAME),
+               E([E(42, E.CONSTANT),
+                  E([E(3.14, E.CONSTANT)], E.COMBINATION),
+                  E(0, E.CONSTANT)], E.COMBINATION)],
+              E.COMBINATION))
 
     def test_expressions_complex(self):
-        self.assert_expressions_results('(a-b - + a+b .( a  b c)(.9 o/ /))',
-                                        ['a-b', '-', '+', 'a+b', '.',
-                                         ['a', 'b', 'c'], [.9, 'o/', '/']])
+        self.assert_expressions_results(
+            '(a-b - + a+b .( a  b c)(.9 o/ /))',
+            E([E('a-b', E.NAME),
+               E('-', E.NAME),
+               E('+', E.NAME),
+               E('a+b', E.NAME),
+               E('.', E.NAME),
+               E([E('a', E.NAME), E('b', E.NAME), E('c', E.NAME)],
+                 E.COMBINATION),
+               E([E(.9, E.CONSTANT), E('o/', E.NAME), E('/', E.NAME)],
+                 E.COMBINATION)],
+              E.COMBINATION))
 
     def test_expressions_multiple(self):
-        self.assert_expressions_results_all('(a) b (c)', [['a'], 'b', ['c']])
+        self.assert_expressions_results_all(
+            '(a) b (c)',
+            [E([E('a', E.NAME)], E.COMBINATION),
+             E('b', E.NAME),
+             E([E('c', E.NAME)], E.COMBINATION)])
 
     def test_expressions_unmatched_parantheses_throws_error(self):
         self.assert_expressions_throws(')', ParseError)

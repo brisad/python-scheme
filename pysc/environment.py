@@ -6,6 +6,10 @@ class TailRecursion(Exception):
         self.next_args = next_args
 
 
+class SymbolError(Exception):
+    pass
+
+
 class Expression(object):
 
     """Store expressions
@@ -134,13 +138,14 @@ class Environment(object):
         if tail_allowed is not None:
             self.tail_allowed = tail_allowed
 
-        if not expr.is_combination():
+        if expr.is_name():
             try:
                 result = self.namespace[expr.scalar]
             except KeyError:
-                result = expr.scalar
+                raise SymbolError('%s undefined' % expr.scalar)
             return result
-
+        elif expr.is_constant():
+            return expr.scalar
         elif expr.fields[0].scalar in self.special_forms:
             f = self.special_forms[expr.fields[0].scalar]
             return f(expr.fields[1:])

@@ -24,11 +24,14 @@ class Parser(object):
         self.prompt1 = prompt1
         self.prompt2 = prompt2
 
-    def _convert(self, primitive):
-        try:
-            return float(primitive) if '.' in primitive else int(primitive)
-        except ValueError:
-            return primitive
+    def _to_constant(self, primitive):
+        """Attempt to convert primitive to constant.
+
+        On succes the constant is returned, otherwise a ValueError
+        exception is raised.
+        """
+
+        return float(primitive) if '.' in primitive else int(primitive)
 
     def next_token(self):
         """Return next token from stream as a string.
@@ -99,7 +102,7 @@ class Parser(object):
                 comb.append(subexpr)
             # Convert list of expressions into an Expression object
             # which is a combination
-            expr = Expression(comb, type_=Expression.COMBINATION)
+            expr = Expression(comb, Expression.COMBINATION)
 
         elif token == ')':
             # A single closing parenthesis is an invalid expression
@@ -107,7 +110,11 @@ class Parser(object):
         elif token is None:
             expr = None
         else:
-            expr = Expression(self._convert(token))
+            try:
+                const = self._to_constant(token)
+                expr = Expression(const, Expression.CONSTANT)
+            except ValueError:
+                expr = Expression(token, Expression.NAME)
 
         return expr
 

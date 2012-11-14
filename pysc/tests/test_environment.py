@@ -1,13 +1,54 @@
 from unittest import TestCase, main
 from pysc.environment import Environment, Procedure, BuiltinProcedure, \
-    Expression, Builtins
+    Expression, Builtins, SymbolError
+
+
+# Some aliases to greatly reduce space in tests
+E = Expression
+C = E.COMBINATION
+CT = E.CONSTANT
+N = E.NAME
+
+# Note: Be sure that no tests modify these Expression objects.
+INT_VAL = 123
+INT_VAL_EXPR = E(INT_VAL, CT)
+FLOAT_VAL = 3.14
+FLOAT_VAL_EXPR = E(FLOAT_VAL, CT)
+VAL1 = 'val1'
+VAL1_EXPR = E(VAL1, N)
+VAL2 = 'val2'
+VAL2_EXPR = E(VAL2, N)
+
+NUMERIC_VAL = FLOAT_VAL
+NUMERIC_VAL_EXPR = E(NUMERIC_VAL, CT)
+
+STRING_VAL = "Hello"
+
+TRUE_VALUE = 'T'
+TRUE_VALUE_EXPR = E(TRUE_VALUE, N)
+FALSE_VALUE = 'F'
+FALSE_VALUE_EXPR = E(FALSE_VALUE, N)
+ELSE_EXPR = E('else', N)
+
+DEF_NAME = 'foo'
+DEF_NAME_EXPR = E(DEF_NAME, N)
+SPEC_FORM_NAME = 'proc'
+SPEC_FORM_NAME_EXPR = E(SPEC_FORM_NAME, N)
+PROC_NAME = 'proc'
+PROC_NAME_EXPR = E(PROC_NAME, N)
+PM1 = 'x'
+PM1_EXPR = E(PM1, N)
+PM2 = 'y'
+PM2_EXPR = E(PM2, N)
+PM3 = 'z'
+PM3_EXPR = E(PM3, N)
+
+ADD = 'add'
+ADD_EXPR = E(ADD, N)
 
 
 def add(operands):
     return operands[0] + operands[1]
-
-def first(x):
-    return x[0].scalar
 
 
 class test_environment(TestCase):
@@ -18,52 +59,59 @@ class test_environment(TestCase):
         self.env.namespace = namespace
 
     def assert_eval_results(self, inp, outp):
-        result = self.env.eval(Expression.create(inp))
+        result = self.env.eval(inp)
         self.assertEqual(outp, result)
 
     def test_eval_numerical_primitive(self):
-        self.assert_eval_results(123, 123)
+        self.assert_eval_results(INT_VAL_EXPR, INT_VAL)
 
     def test_eval_numerical_float_primitive(self):
-        self.assert_eval_results(3.14, 3.14)
+        self.assert_eval_results(FLOAT_VAL_EXPR, FLOAT_VAL)
 
     def test_eval_variable(self):
-        self.set_namespace({'var': 123})
-        self.assert_eval_results('var', 123)
+        self.set_namespace({VAL1: NUMERIC_VAL})
+        self.assert_eval_results(VAL1_EXPR, NUMERIC_VAL)
 
     def test_eval_function(self):
-        self.set_namespace({'add': add})
-        self.assert_eval_results('add', add)
+        self.set_namespace({ADD: add})
+        self.assert_eval_results(ADD_EXPR, add)
 
     def test_eval_combination(self):
-        self.set_namespace({'add': BuiltinProcedure(add), 'var': 123})
-        self.assert_eval_results(['add', 'var', 456], 579)
+        self.set_namespace({ADD: BuiltinProcedure(add), VAL1: 123})
+        self.assert_eval_results(E([ADD_EXPR, VAL1_EXPR, E(456, CT)], C),
+                                 579)
 
     def test_eval_nested_combination(self):
-        self.set_namespace({'add': BuiltinProcedure(add), 'var': 123})
-        self.assert_eval_results(['add', 'var', ['add', 1, 2]], 126)
+        self.set_namespace({ADD: BuiltinProcedure(add), VAL1: 123})
+        self.assert_eval_results(E([ADD_EXPR, VAL1_EXPR,
+                                    E([ADD_EXPR, E(1, CT), E(2, CT)], C)], C),
+                                 126)
 
     def test_eval_special_form(self):
-        self.env = Environment(special_forms={'first': first})
-        self.assert_eval_results(['first', 'var'], 'var')
+        self.env = Environment(special_forms={SPEC_FORM_NAME: lambda x: x[0]})
+        self.assert_eval_results(E([SPEC_FORM_NAME_EXPR, PM1_EXPR], C),
+                                 PM1_EXPR)
 
     def test_eval_defined_procedure(self):
-        self.set_namespace({'add': BuiltinProcedure(add),
-                            'func': Procedure(
-                    [Expression.create(['add', 'x', 'y'])],
-                    parameters=['x', 'y'])})
-        self.assert_eval_results(['func', 1, 2], 3)
+        self.set_namespace({ADD: BuiltinProcedure(add),
+                            PROC_NAME: Procedure(
+                    [E([ADD_EXPR, PM1_EXPR, PM2_EXPR], C)],
+                    parameters=[PM1, PM2])})
+        self.assert_eval_results(E([PROC_NAME_EXPR, E(1, CT), E(2, CT)], C),
+                                 3)
 
     def test_eval_nested_defined_procedure(self):
-        self.set_namespace({'add': BuiltinProcedure(add),
-                            'func': Procedure(
-                    [Expression.create(['add', 'x', ['add', 20, 'y']])],
-                    parameters=['x', 'y'])})
-        self.assert_eval_results(['func', 1, 2], 23)
+        self.set_namespace({ADD: BuiltinProcedure(add),
+                            PROC_NAME: Procedure(
+                    [E([ADD_EXPR, PM1_EXPR,
+                        E([ADD_EXPR, E(20, CT), PM2_EXPR], C)], C)],
+                    parameters=[PM1, PM2])})
+        self.assert_eval_results(E([PROC_NAME_EXPR, E(1, CT), E(2, CT)], C),
+                                 23)
 
+    def test_eval_symbol_not_found_raises_error(self):
+        self.assertRaises(SymbolError, self.env.eval, E('foo'))
 
-NUMERIC_VAL = 3.14
-STRING_VAL = "Hello"
 
 class test_expression(TestCase):
     def test_scalar(self):
@@ -78,13 +126,13 @@ class test_expression(TestCase):
         self.assertEqual(STRING_VAL, expr.scalar)
 
     def test_name(self):
-        expr = Expression(STRING_VAL, type_=Expression.NAME)
+        expr = Expression(STRING_VAL, Expression.NAME)
         self.assertTrue(expr.is_name())
         self.assertFalse(expr.is_combination())
         self.assertEqual(STRING_VAL, expr.scalar)
 
     def test_constant(self):
-        expr = Expression(NUMERIC_VAL, type_=Expression.CONSTANT)
+        expr = Expression(NUMERIC_VAL, Expression.CONSTANT)
         self.assertTrue(expr.is_constant())
         self.assertFalse(expr.is_name())
         self.assertFalse(expr.is_combination())
@@ -93,14 +141,14 @@ class test_expression(TestCase):
     def test_combination(self):
         expr = Expression([Expression(NUMERIC_VAL),
                            Expression(STRING_VAL)],
-                          type_=Expression.COMBINATION)
+                          Expression.COMBINATION)
         self.assertTrue(expr.is_combination())
         self.assertEqual([Expression(NUMERIC_VAL), Expression(STRING_VAL)],
                          expr.fields)
 
     def test_combination_one_field(self):
         expr = Expression([Expression(NUMERIC_VAL)],
-                          type_=Expression.COMBINATION)
+                          Expression.COMBINATION)
         self.assertTrue(expr.is_combination())
         self.assertEqual([Expression(NUMERIC_VAL)], expr.fields)
 
@@ -139,11 +187,6 @@ class test_expression(TestCase):
         self.assertTrue(expr4 != expr7)
 
 
-TRUE_VALUE = 'T'
-FALSE_VALUE = 'F'
-VAL1 = 'val1'
-VAL2 = 'val2'
-
 class test_special_forms(TestCase):
 
     def setUp(self):
@@ -156,7 +199,7 @@ class test_special_forms(TestCase):
         self.env.namespace = namespace
 
     def call_special_form(self, special_form, inp):
-        result = special_form(Expression.create(inp).fields)
+        result = special_form(inp)
         return result
 
     def assert_special_form_returns(self, special_form, inp, outp):
@@ -171,49 +214,53 @@ class test_special_forms(TestCase):
     # define
     def test_define(self):
         self.assert_define_sets_namespace(
-            ['x', NUMERIC_VAL],
-            'x',
+            [DEF_NAME_EXPR, NUMERIC_VAL_EXPR],
+            DEF_NAME,
             NUMERIC_VAL)
 
     def test_define_evals_argument(self):
-        self.set_namespace({'add': BuiltinProcedure(add)})
+        self.set_namespace({ADD: BuiltinProcedure(add)})
         self.assert_define_sets_namespace(
-            ['x', ['add', NUMERIC_VAL, NUMERIC_VAL]],
-            'x',
+            [DEF_NAME_EXPR,
+             E([ADD_EXPR, NUMERIC_VAL_EXPR, NUMERIC_VAL_EXPR], C)],
+            DEF_NAME,
             2 * NUMERIC_VAL)
 
     def test_define_compound_procedure1(self):
         self.assert_define_sets_namespace(
-            [['x', 'param'], 'param'],
-            'x',
-            Procedure([Expression.create('param')],
-                      parameters=['param']))
+            [E([PROC_NAME_EXPR, PM1_EXPR], C), PM1_EXPR],
+            PROC_NAME,
+            Procedure([PM1_EXPR], parameters=[PM1]))
 
     def test_define_compound_procedure2(self):
         self.assert_define_sets_namespace(
-            [['f', 'x', 'y', 'z'], ['x', 'y', 'z']],
-            'f',
-            Procedure([Expression.create(['x', 'y', 'z'])],
-                      parameters=['x', 'y', 'z']))
+            [E([PROC_NAME_EXPR, PM1_EXPR, PM2_EXPR, PM3_EXPR], C),
+             E([PM1_EXPR, PM2_EXPR, PM3_EXPR], C)],
+            PROC_NAME,
+            Procedure([E([PM1_EXPR, PM2_EXPR, PM3_EXPR], C)],
+                      parameters=[PM1, PM2, PM3]))
 
     # cond
     def test_cond_first_predicate_true(self):
         self.assert_special_form_returns(
             self.env._cond,
-            [[TRUE_VALUE, VAL1], [FALSE_VALUE, VAL2]],
+            [E([TRUE_VALUE_EXPR, VAL1_EXPR], C),
+             E([FALSE_VALUE_EXPR, VAL2_EXPR], C)],
             1)
 
     def test_cond_second_predicate_true(self):
         self.assert_special_form_returns(
             self.env._cond,
-            [[FALSE_VALUE, VAL1], [TRUE_VALUE, VAL2]],
+            [E([FALSE_VALUE_EXPR, VAL1_EXPR], C),
+             E([TRUE_VALUE_EXPR, VAL2_EXPR], C)],
             2)
 
     def test_cond_no_predicate_true(self):
         # Value of cond is undefined if no predicate evaluates to true
         self.call_special_form(
             self.env._cond,
-            [[FALSE_VALUE, VAL1], [FALSE_VALUE, VAL2]])
+            [E([FALSE_VALUE_EXPR, VAL1_EXPR], C),
+             E([FALSE_VALUE_EXPR, VAL2_EXPR], C)])
         # Don't care about result, just don't crash
         self.assertTrue(True)
 
@@ -223,13 +270,13 @@ class test_special_forms(TestCase):
         self.set_namespace({'else': False})
         self.assert_special_form_returns(
             self.env._cond,
-            [[FALSE_VALUE, VAL1], ['else', VAL2]],
+            [E([FALSE_VALUE_EXPR, VAL1_EXPR], C), E([ELSE_EXPR, VAL2_EXPR], C)],
             2)
 
     def test_cond_with_list_of_expressions(self):
         self.assert_special_form_returns(
             self.env._cond,
-            [[TRUE_VALUE, VAL1, VAL2]],
+            [E([TRUE_VALUE_EXPR, VAL1_EXPR, VAL2_EXPR], C)],
             2)
 
     def test_ill_formed_cond_throws_error(self):
@@ -240,35 +287,51 @@ class test_special_forms(TestCase):
 
     def test_if_true(self):
         self.assert_special_form_returns(
-            self.env._if, [TRUE_VALUE, VAL1, VAL2], 1)
+            self.env._if,
+            [TRUE_VALUE_EXPR, VAL1_EXPR, VAL2_EXPR],
+            1)
 
     def test_if_false(self):
         self.assert_special_form_returns(
-            self.env._if, [FALSE_VALUE, VAL1, VAL2], 2)
+            self.env._if,
+            [FALSE_VALUE_EXPR, VAL1_EXPR, VAL2_EXPR],
+            2)
 
     def test_and_all_true(self):
         self.assert_special_form_returns(
-            self.env._and, [TRUE_VALUE, VAL1], 1)
+            self.env._and,
+            [TRUE_VALUE_EXPR, VAL1_EXPR],
+            1)
 
     def test_and_all_false(self):
         self.assert_special_form_returns(
-            self.env._and, [FALSE_VALUE, FALSE_VALUE], False)
+            self.env._and,
+            [FALSE_VALUE_EXPR, FALSE_VALUE_EXPR],
+            False)
 
     def test_and_one_false(self):
         self.assert_special_form_returns(
-            self.env._and, [VAL1, FALSE_VALUE], False)
+            self.env._and,
+            [VAL1_EXPR, FALSE_VALUE_EXPR],
+            False)
 
     def test_or_all_false(self):
         self.assert_special_form_returns(
-            self.env._or, [FALSE_VALUE, FALSE_VALUE], False)
+            self.env._or,
+            [FALSE_VALUE_EXPR, FALSE_VALUE_EXPR],
+            False)
 
     def test_or_all_true(self):
         self.assert_special_form_returns(
-            self.env._or, [VAL1, TRUE_VALUE], 1)
+            self.env._or,
+            [VAL1_EXPR, TRUE_VALUE_EXPR],
+            1)
 
     def test_or_one_true(self):
         self.assert_special_form_returns(
-            self.env._or, [FALSE_VALUE, VAL1], 1)
+            self.env._or,
+            [FALSE_VALUE_EXPR, VAL1_EXPR],
+            1)
 
 
 class test_builtins(TestCase):
@@ -341,7 +404,7 @@ class test_procedure(TestCase):
         set to args.  Assert return value is equal to outp.
         """
 
-        p = Procedure([Expression.create(p) for p in procedure], parameters)
+        p = Procedure(procedure, parameters)
         result = p.apply(self.env, args)
         self.assertEqual(result, outp)
 
@@ -381,19 +444,22 @@ class test_procedure(TestCase):
     def test_apply_combination(self):
         """Test that a compound procedure is correctly applied."""
 
-        self.set_namespace({'f': BuiltinProcedure(add)})
-        self.assert_procedure_results([['f', 'x', 'y']], ['x', 'y'],
-                                      [1, 2], 3)
+        self.set_namespace({PROC_NAME: BuiltinProcedure(add)})
+        self.assert_procedure_results(
+            [E([PROC_NAME_EXPR, PM1_EXPR, PM2_EXPR], C)],
+            [PM1, PM2],
+            [1, 2], 3)
 
     def test_apply_primitive_body(self):
         """Test procedure with body only consisting of a primitive."""
 
-        self.assert_procedure_results(['x'], ['x'], [20], 20)
+        self.assert_procedure_results([PM1_EXPR], [PM1], [42], 42)
 
     def test_apply_list_of_expressions(self):
         """Test procedure with more than one expression."""
 
-        self.assert_procedure_results(['x', 2], ['x'], [1], 2)
+        self.assert_procedure_results([PM1_EXPR, NUMERIC_VAL_EXPR],
+                                      [PM1], [42], NUMERIC_VAL)
 
 
 class test_builtin_procedure(TestCase):
