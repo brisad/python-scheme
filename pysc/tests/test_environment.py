@@ -175,6 +175,31 @@ class test_expression(TestCase):
         self.assertTrue(expr2 != expr6)
         self.assertTrue(expr4 != expr7)
 
+    def test_repr_constant(self):
+        expr = Expression(INT_VAL, Expression.CONSTANT)
+        self.assertEqual('Expression(%s, CONSTANT)' % repr(INT_VAL), repr(expr))
+
+    def test_repr_name(self):
+        expr = Expression(STRING_VAL, Expression.NAME)
+        self.assertEqual('Expression(%s, NAME)' % repr(STRING_VAL), repr(expr))
+
+    def test_repr_combination(self):
+        expr = Expression([INT_VAL_EXPR], Expression.COMBINATION)
+        self.assertEqual('Expression(%s, COMBINATION)' % \
+                             repr([INT_VAL_EXPR]), repr(expr))
+
+    def test_str_constant(self):
+        expr = Expression(INT_VAL, Expression.CONSTANT)
+        self.assertEqual('%r' % INT_VAL, str(expr))
+
+    def test_str_name(self):
+        expr = Expression(DEF_NAME, Expression.NAME)
+        self.assertEqual('%r' % DEF_NAME, str(expr))
+
+    def test_str_combination(self):
+        expr = Expression([INT_VAL_EXPR], Expression.COMBINATION)
+        self.assertEqual('[%s]' % str(INT_VAL_EXPR), str(expr))
+
 
 class test_special_forms(TestCase):
 

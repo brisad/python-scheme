@@ -60,6 +60,29 @@ class Expression(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __repr__(self):
+        typename = ("CONSTANT", "NAME", "COMBINATION")[self.type_]
+        if self.is_combination():
+            contents = self.fields
+        else:
+            contents = self.scalar
+        return "%s(%r, %s)" % (self.__class__.__name__, contents, typename)
+
+    def __str__(self):
+        if self.is_combination():
+            elem = []
+            # To get nicer output, run str() on all elements which are
+            # instances of Expression.
+            for field in self.fields:
+                if isinstance(field, self.__class__):
+                    elem.append(str(field))
+                else:
+                    elem.append(repr(field))
+            result = '[%s]' % ', '.join(elem)
+        else:
+            result = '%r' % self.scalar
+        return result
+
 
 class Procedure(object):
     def __init__(self, function, parameters=None):
