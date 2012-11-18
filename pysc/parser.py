@@ -1,5 +1,6 @@
 import sys
 import re
+import StringIO
 from environment import Expression
 
 
@@ -8,7 +9,14 @@ class ParseError(Exception):
 
 
 class Parser(object):
-    """Parse character streams into Expressions"""
+    """Parse character streams into Expressions
+
+    Instances of Parser read input as streams, which are converted
+    into Scheme expressions.
+
+    The classmethod from_string() can be used if the input is
+    available as a string.
+    """
 
     def __init__(self, stream, output=None, prompt1=None, prompt2=None):
         """Create parser connected to specified stream.
@@ -125,3 +133,15 @@ class Parser(object):
         while expr is not None:
             yield expr
             expr = self._get_next_expr(self.prompt1)
+
+    @classmethod
+    def from_string(cls, string):
+        """Return list of expressions parsed from string
+
+        Convenience method to automatically convert the string into a
+        stream and create a Parser object to parse the input.
+        """
+
+        stream = StringIO.StringIO(string)
+        parser = Parser(stream)
+        return list(parser.expressions())

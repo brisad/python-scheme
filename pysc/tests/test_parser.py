@@ -3,6 +3,7 @@ from unittest import TestCase, main
 from pysc.parser import Parser, ParseError
 from pysc.environment import Expression as E
 
+
 class test_parser(TestCase):
     def list_expressions(self, inp):
         stream = StringIO.StringIO(inp)
@@ -99,6 +100,10 @@ class test_parser(TestCase):
         list(self.p.expressions())
         outstream.seek(0)
         self.assertEqual('. ', outstream.read())
+
+    def test_from_string(self):
+        result = Parser.from_string('a 1')
+        self.assertEqual([E('a', E.NAME), E(1, E.CONSTANT)], result)
 
 
 if __name__ == '__main__':
