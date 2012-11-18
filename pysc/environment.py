@@ -31,8 +31,21 @@ class Expression(object):
     CONSTANT, NAME, COMBINATION = range(3)
     def __init__(self, contents, type_=NAME):
         self.type_ = type_
-        self.fields = contents
-        self.scalar = contents
+        self.contents = contents
+
+    @property
+    def scalar(self):
+        if self.type_ != self.CONSTANT and self.type_ != self.NAME:
+            raise AttributeError(
+                "This Expression type has no scalar attribute")
+        return self.contents
+
+    @property
+    def fields(self):
+        if self.type_ != self.COMBINATION:
+            raise AttributeError(
+                "This Expression type has no fields attribute")
+        return self.contents
 
     def is_constant(self):
         return self.type_ == self.CONSTANT

@@ -152,6 +152,16 @@ class test_expression(TestCase):
         self.assertTrue(expr.is_combination())
         self.assertEqual([Expression(NUMERIC_VAL)], expr.fields)
 
+    def test_scalar_wrong_type_raises_attribute_error(self):
+        expr = Expression([NUMERIC_VAL_EXPR], Expression.COMBINATION)
+        with self.assertRaises(AttributeError):
+            expr.scalar
+
+    def test_fields_wrong_type_raises_attribute_error(self):
+        expr = Expression(NUMERIC_VAL, Expression.CONSTANT)
+        with self.assertRaises(AttributeError):
+            expr.fields
+
     def test_equality(self):
         """Test __eq__ and __ne__ of Expression."""
 
