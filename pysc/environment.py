@@ -205,8 +205,10 @@ class Environment(object):
         Operands are represented as a list of Expression objects.
         """
 
-        return self._cond([Expression([operands[0], operands[1]], True),
-                           Expression([Expression('else'), operands[2]], True)])
+        return self._cond([Expression([operands[0], operands[1]],
+                                      Expression.COMBINATION),
+                           Expression([Expression('else'), operands[2]],
+                                      Expression.COMBINATION)])
 
     def _and(self, operands):
         """Apply special form 'and' to operands.
