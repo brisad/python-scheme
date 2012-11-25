@@ -57,8 +57,9 @@ def test_all_sessions(assert_success=True):
     session tests."""
 
     sessiondir = os.path.join(os.path.dirname(__file__), 'sessions')
-    for filename in os.listdir(sessiondir):
-        success = run_session(os.path.join(sessiondir, filename))
+    entries = [os.path.join(sessiondir, x) for x in os.listdir(sessiondir)]
+    for filename in ifilter(os.path.isfile, entries):
+        success = run_session(filename)
         if assert_success:
             assert success
 
