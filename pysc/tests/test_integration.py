@@ -17,7 +17,9 @@ def run_session(filename):
         input_expression = ""
         # Iterate over non-blank lines
         for line in ifilter(None, imap(str.strip, f)):
-            if line.startswith('> '):
+            if line.startswith(';'):
+                continue
+            elif line.startswith('> '):
                 # Lines are stripped, so add a space to get whitespace
                 # between the lines.
                 input_expression += " " + line[2:]
