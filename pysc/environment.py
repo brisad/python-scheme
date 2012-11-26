@@ -283,6 +283,13 @@ class Builtins(object):
     def equals(cls, operands):
         return operands[0] == operands[1]
 
+    @classmethod
+    def abs(cls, operands):
+        return abs(operands[0])
+
+    @classmethod
+    def remainder(cls, operands):
+        return operands[0] % operands[1]
 
     @classmethod
     def namespace(cls):
@@ -294,5 +301,7 @@ class Builtins(object):
             'not': BuiltinProcedure(cls.not_),
             '>': BuiltinProcedure(cls.greater_than),
             '<': BuiltinProcedure(cls.less_than),
-            '=': BuiltinProcedure(cls.equals)
+            '=': BuiltinProcedure(cls.equals),
+            'abs': BuiltinProcedure(cls.abs),
+            'remainder': BuiltinProcedure(cls.remainder)
             }

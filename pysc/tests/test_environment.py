@@ -413,6 +413,18 @@ class test_builtins(TestCase):
         result = Builtins.equals([3, 4])
         self.assertFalse(result)
 
+    def test_abs(self):
+        result = Builtins.abs([3])
+        self.assertEqual(3, result)
+        result = Builtins.abs([-3])
+        self.assertEqual(3, result)
+
+    def test_reamainder(self):
+        result = Builtins.remainder([3, 3])
+        self.assertEqual(0, result)
+        result = Builtins.remainder([5, 3])
+        self.assertEqual(2, result)
+
 
 class test_procedure(TestCase):
     def setUp(self):
