@@ -32,6 +32,9 @@ class test_parser(TestCase):
     def test_expressions_symbol_with_whitespace(self):
         self.assert_expressions_results(' symbol ', E('symbol', E.NAME))
 
+    def test_expressions_comment(self):
+        self.assert_expressions_results_all('42 ;43', [E(42, E.CONSTANT)])
+
     def test_expressions_integer(self):
         self.assert_expressions_results('42', E(42, E.CONSTANT))
 

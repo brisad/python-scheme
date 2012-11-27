@@ -61,6 +61,11 @@ class Parser(object):
         while c.isspace() and c != '\n':
             c = self.stream.read(1)
 
+        # Skip rest of line if a comment is found
+        if c == ';':
+            while c != '' and c != '\n':
+                c = self.stream.read(1)
+
         # Parentheses and newlines are special, return them
         # immediately if found.
         if c == '(' or c == ')' or c == '\n':
