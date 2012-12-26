@@ -334,6 +334,10 @@ class Builtins(object):
         stream.write('\n')
 
     @classmethod
+    def display(cls, operands, stream):
+        stream.write(str(operands[0]))
+
+    @classmethod
     def namespace(cls, outstream=None):
         return {
             '+': BuiltinProcedure(cls.add),
@@ -346,5 +350,6 @@ class Builtins(object):
             '=': BuiltinProcedure(cls.equals),
             'abs': BuiltinProcedure(cls.abs),
             'remainder': BuiltinProcedure(cls.remainder),
-            'newline': BuiltinProcedure(cls.newline, True, outstream)
+            'newline': BuiltinProcedure(cls.newline, True, outstream),
+            'display': BuiltinProcedure(cls.display, True, outstream)
         }

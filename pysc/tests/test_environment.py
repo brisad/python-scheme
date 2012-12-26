@@ -428,9 +428,15 @@ class test_builtins(TestCase):
 
     def test_newline(self):
         stream = StringIO.StringIO()
-        result = Builtins.newline(None, stream)
+        Builtins.newline(None, stream)
         stream.seek(0)
         self.assertEqual(stream.read(), '\n')
+
+    def test_display(self):
+        stream = StringIO.StringIO()
+        Builtins.display([STRING_VAL], stream)
+        stream.seek(0)
+        self.assertEqual(stream.read(), STRING_VAL)
 
 
 class test_procedure(TestCase):
