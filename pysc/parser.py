@@ -24,6 +24,7 @@ class Parser(object):
         output -- stream to output prompt on (default None)
         prompt1 -- prompt for each new expression (default None)
         prompt2 -- prompt for unfinished expressions (default None)
+
         """
 
         self.push_back = None
@@ -35,16 +36,21 @@ class Parser(object):
     def _to_constant(self, primitive):
         """Attempt to convert primitive to constant.
 
-        On succes the constant is returned, otherwise a ValueError
+        On success the constant is returned, otherwise a ValueError
         exception is raised.
+
         """
 
+        if primitive[0] == '"':
+            assert primitive[-1] == '"'
+            return primitive[1:-1]
         return float(primitive) if '.' in primitive else int(primitive)
 
     def next_token(self):
         """Return next token from stream as a string.
 
         At end-of-stream, return None.
+
         """
 
         # If there's a character in self.push_back, use it.  Otherwise
@@ -70,6 +76,14 @@ class Parser(object):
         # immediately if found.
         if c == '(' or c == ')' or c == '\n':
             token = c
+        elif c == '"':
+            # Start a string constant
+            token = '"'
+            c = self.stream.read(1)
+            while c != '"':
+                token += c
+                c = self.stream.read(1)
+            token += '"'
         else:
             token = ''
             # Build up the token until a whitespace or parenthesis are

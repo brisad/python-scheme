@@ -44,6 +44,9 @@ class test_parser(TestCase):
     def test_expressions_float(self):
         self.assert_expressions_results('3.14', E(3.14, E.CONSTANT))
 
+    def test_expressions_string(self):
+        self.assert_expressions_results('"a b c"', E("a b c", E.CONSTANT))
+
     def test_expressions_combination(self):
         self.assert_expressions_results(
             '(symbol 42 3.14)',
