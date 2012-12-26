@@ -125,9 +125,47 @@ class Procedure(object):
         return not self.__eq__(other)
 
 
-class BuiltinProcedure(Procedure):
+class DummyStream:
+    def read(self, data):
+        pass
+
+    def write(self, data):
+        pass
+
+
+class BuiltinProcedure(object):
+    def __init__(self, function, needs_stream=False, stream=None):
+        self.function = function
+        self.needs_stream = needs_stream
+        if needs_stream:
+            if stream is None:
+                stream = DummyStream()
+                self.uses_dummy = True
+            else:
+                self.uses_dummy = False
+        else:
+            stream = None
+        self.stream = stream
+
     def apply(self, env, args):
-        return self.function(args)
+        if self.needs_stream:
+            return self.function(args, self.stream)
+        else:
+            return self.function(args)
+
+    def __eq__(self, other):
+        if self.function != other.function:
+            return False
+        if self.needs_stream and other.needs_stream:
+            if self.uses_dummy and other.uses_dummy:
+                return True
+            else:
+                return self.stream == other.stream
+        else:
+            return self.needs_stream == other.needs_stream
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Environment(object):
@@ -292,7 +330,11 @@ class Builtins(object):
         return operands[0] % operands[1]
 
     @classmethod
-    def namespace(cls):
+    def newline(cls, operands, stream):
+        stream.write('\n')
+
+    @classmethod
+    def namespace(cls, outstream=None):
         return {
             '+': BuiltinProcedure(cls.add),
             '-': BuiltinProcedure(cls.subtract),
@@ -303,5 +345,6 @@ class Builtins(object):
             '<': BuiltinProcedure(cls.less_than),
             '=': BuiltinProcedure(cls.equals),
             'abs': BuiltinProcedure(cls.abs),
-            'remainder': BuiltinProcedure(cls.remainder)
-            }
+            'remainder': BuiltinProcedure(cls.remainder),
+            'newline': BuiltinProcedure(cls.newline, True, outstream)
+        }

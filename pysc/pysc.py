@@ -46,7 +46,7 @@ class Interpreter(object):
         self.prompt2 = prompt2
         self.parser = Parser(self.instream, self.outstream,
                              self.prompt1, self.prompt2)
-        self.environment = Environment(namespace=Builtins.namespace())
+        self.environment = Environment(namespace=Builtins.namespace(outstream))
 
     def run(self):
         """Run interpreter by evaluating expessions.

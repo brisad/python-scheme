@@ -1,3 +1,4 @@
+import StringIO
 from unittest import TestCase, main
 from pysc.environment import Environment, Procedure, BuiltinProcedure, \
     Expression, Builtins, SymbolError
@@ -425,6 +426,12 @@ class test_builtins(TestCase):
         result = Builtins.remainder([5, 3])
         self.assertEqual(2, result)
 
+    def test_newline(self):
+        stream = StringIO.StringIO()
+        result = Builtins.newline(None, stream)
+        stream.seek(0)
+        self.assertEqual(stream.read(), '\n')
+
 
 class test_procedure(TestCase):
     def setUp(self):
@@ -438,6 +445,7 @@ class test_procedure(TestCase):
 
         Call scheme procedure defined by procedure, with parameters
         set to args.  Assert return value is equal to outp.
+
         """
 
         p = Procedure(procedure, parameters)
@@ -448,34 +456,30 @@ class test_procedure(TestCase):
         """Test that identical Procedure objects compares to true.
 
         Procedures are compared for equality in tests that set the
-        namespace of the environment, containing procedures."""
+        namespace of the environment, containing procedures.
 
-        p1 = Procedure(add)
-        p2 = Procedure(add)
-        p3 = Procedure([['foo', 'a']], parameters=['a'])
-        p4 = Procedure([['foo', 'a']], parameters=['a'])
+        """
+
+        p1 = Procedure([['foo', 'a']], parameters=['a'])
+        p2 = Procedure([['foo', 'a']], parameters=['a'])
         self.assertTrue(p1 == p2)
-        self.assertTrue(p3 == p4)
         self.assertFalse(p1 != p2)
-        self.assertFalse(p3 != p4)
         
     def test_equality_false(self):
         """Test that different Procedure objects compares to false.
 
         Procedures are compared for equality in tests that set the
-        namespace of the environment, containing procedures."""
+        namespace of the environment, containing procedures.
 
-        p1 = Procedure(add)
-        p2 = Procedure(sum)
-        p3 = Procedure([['foo', 'a']], parameters=['a'])
-        p4 = Procedure([['foo', 'a']])
-        p5 = Procedure([['bar', 'a']])
+        """
+
+        p1 = Procedure([['foo', 'a']], parameters=['a'])
+        p2 = Procedure([['foo', 'a']])
+        p3 = Procedure([['bar', 'a']])
         self.assertTrue(p1 != p2)
-        self.assertTrue(p3 != p4)
-        self.assertTrue(p4 != p5)
+        self.assertTrue(p2 != p3)
         self.assertFalse(p1 == p2)
-        self.assertFalse(p3 == p4)
-        self.assertFalse(p4 == p5)
+        self.assertFalse(p2 == p3)
 
     def test_apply_combination(self):
         """Test that a compound procedure is correctly applied."""
@@ -499,12 +503,71 @@ class test_procedure(TestCase):
 
 
 class test_builtin_procedure(TestCase):
-    def test_builtin_python_function(self):
-        """Test primitive procedure, implemented in Python"""
 
-        p = BuiltinProcedure(add)
+    """Test primitive procedures, implemented in Python."""
+
+    def test_builtin_python_function(self):
+        """Test normal builtin procedure."""
+
+        p = BuiltinProcedure(lambda x: x[0] + x[1])
         result = p.apply(None, [1, 2])
         self.assertEqual(result, 3)
+
+    def test_builtin_python_function_with_stream(self):
+        """Test procedure that needs a stream."""
+
+        stream = StringIO.StringIO()
+        p = BuiltinProcedure(lambda x, y: y.write('42'), True, stream)
+        result = p.apply(None, None)
+        stream.seek(0)
+        self.assertEqual(stream.read(), '42')
+
+    def test_builtin_python_function_with_no_stream(self):
+        """Test procedure that needs a stream, but is passed None."""
+
+        p = BuiltinProcedure(lambda x, y: y.write('42'), True, None)
+        result = p.apply(None, None)
+        # Just make sure it runs
+        self.assertTrue(True)
+
+    def test_equality_true(self):
+        """Test comparison of equal BuiltinProcedure objects."""
+
+        func = object()
+        stream = object()
+        p1 = BuiltinProcedure(func)
+        p2 = BuiltinProcedure(func)
+        p3 = BuiltinProcedure(func, True, stream)
+        p4 = BuiltinProcedure(func, True, stream)
+        p5 = BuiltinProcedure(func, True)
+        p6 = BuiltinProcedure(func, True)
+        p7 = BuiltinProcedure(func, False)
+        p8 = BuiltinProcedure(func, False, stream)
+        self.assertTrue(p1 == p2)
+        self.assertTrue(p3 == p4)
+        self.assertTrue(p5 == p6)
+        self.assertTrue(p7 == p8)
+        self.assertFalse(p1 != p2)
+        self.assertFalse(p3 != p4)
+        self.assertFalse(p5 != p6)
+        self.assertFalse(p7 != p8)
+
+    def test_equality_false(self):
+        """Test comparison of unequal BuiltinProcedure objects."""
+
+        func = object()
+        p1 = BuiltinProcedure(object())
+        p2 = BuiltinProcedure(object())
+        p3 = BuiltinProcedure(func, True, object())
+        p4 = BuiltinProcedure(func, True, object())
+        p5 = BuiltinProcedure(func, True)
+        p6 = BuiltinProcedure(func, False)
+        self.assertTrue(p1 != p2)
+        self.assertTrue(p3 != p4)
+        self.assertTrue(p5 != p6)
+        self.assertFalse(p1 == p2)
+        self.assertFalse(p3 == p4)
+        self.assertFalse(p5 == p6)
 
 
 if __name__ == '__main__':
