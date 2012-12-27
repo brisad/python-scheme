@@ -449,6 +449,10 @@ class test_builtins(TestCase):
         t2 = Builtins.runtime(None)
         self.assertGreaterEqual(t2, t1)
 
+    def test_random(self):
+        result = Builtins.random([1])
+        self.assertEqual(0, result)
+
 
 class test_procedure(TestCase):
     def setUp(self):

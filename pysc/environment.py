@@ -1,3 +1,4 @@
+import random
 import time
 import operator
 
@@ -352,6 +353,10 @@ class Builtins(object):
         return int(time.time() * 1000000)
 
     @classmethod
+    def random(cls, operands):
+        return random.randint(0, operands[0] - 1)
+
+    @classmethod
     def namespace(cls, outstream=None):
         return {
             '+': BuiltinProcedure(cls.add),
@@ -366,5 +371,6 @@ class Builtins(object):
             'remainder': BuiltinProcedure(cls.remainder),
             'newline': BuiltinProcedure(cls.newline, True, outstream),
             'display': BuiltinProcedure(cls.display, True, outstream),
-            'runtime': BuiltinProcedure(cls.runtime)
+            'runtime': BuiltinProcedure(cls.runtime),
+            'random': BuiltinProcedure(cls.random)
         }
