@@ -359,6 +359,8 @@ class Builtins(object):
     @classmethod
     def namespace(cls, outstream=None):
         return {
+            'true': True,
+            'false': False,
             '+': BuiltinProcedure(cls.add),
             '-': BuiltinProcedure(cls.subtract),
             '*': BuiltinProcedure(cls.multiply),
