@@ -10,6 +10,7 @@ class Interpreter(object):
 
     Public methods:
     run() -- Run interpreter by evaluating expressions
+
     """
 
     def __init__(self, instream=sys.stdin, outstream=sys.stdout,
@@ -35,6 +36,7 @@ class Interpreter(object):
         outstream -- stream to write output to (default sys.stdout)
         prompt1 -- Normal prompt (default '> ' if interactive)
         prompt2 -- Secondary prompt (default None)
+
         """
 
         self.instream = instream
@@ -54,13 +56,16 @@ class Interpreter(object):
         Parses input stream and returns expressions which then are
         evaluated by the environment.  The results are then written,
         for each evaluated expression, to the output stream.
+
         """
 
         if self.prompt1:
             self.outstream.write(self.prompt1)
         try:
             for expr in self.parser.expressions():
-                print self.environment.eval(expr)
+                result = self.environment.eval(expr)
+                if result is not None:
+                    print result
         except KeyboardInterrupt:
             pass
 
