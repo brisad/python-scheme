@@ -430,13 +430,18 @@ class test_builtins(TestCase):
         stream = StringIO.StringIO()
         Builtins.newline(None, stream)
         stream.seek(0)
-        self.assertEqual(stream.read(), '\n')
+        self.assertEqual('\n', stream.read())
 
     def test_display(self):
         stream = StringIO.StringIO()
         Builtins.display([STRING_VAL], stream)
         stream.seek(0)
-        self.assertEqual(stream.read(), STRING_VAL)
+        self.assertEqual(STRING_VAL, stream.read())
+
+    def test_runtime(self):
+        t1 = Builtins.runtime(None)
+        t2 = Builtins.runtime(None)
+        self.assertGreaterEqual(t2, t1)
 
 
 class test_procedure(TestCase):

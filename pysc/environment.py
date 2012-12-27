@@ -1,3 +1,4 @@
+import time
 import operator
 
 
@@ -338,6 +339,10 @@ class Builtins(object):
         stream.write(str(operands[0]))
 
     @classmethod
+    def runtime(cls, operands):
+        return int(time.time() * 1000000)
+
+    @classmethod
     def namespace(cls, outstream=None):
         return {
             '+': BuiltinProcedure(cls.add),
@@ -351,5 +356,6 @@ class Builtins(object):
             'abs': BuiltinProcedure(cls.abs),
             'remainder': BuiltinProcedure(cls.remainder),
             'newline': BuiltinProcedure(cls.newline, True, outstream),
-            'display': BuiltinProcedure(cls.display, True, outstream)
+            'display': BuiltinProcedure(cls.display, True, outstream),
+            'runtime': BuiltinProcedure(cls.runtime)
         }
