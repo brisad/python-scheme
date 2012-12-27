@@ -322,6 +322,12 @@ class test_special_forms(TestCase):
             [FALSE_VALUE_EXPR, VAL1_EXPR, VAL2_EXPR],
             2)
 
+    def test_if_true_without_alternate(self):
+        self.assert_special_form_returns(
+            self.env._if,
+            [TRUE_VALUE_EXPR, VAL1_EXPR],
+            1)
+
     def test_and_all_true(self):
         self.assert_special_form_returns(
             self.env._and,

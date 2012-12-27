@@ -27,6 +27,7 @@ class Expression(object):
     type_ -- type of expression
     fields -- contents of expression if type is a combination
     scalar -- contents of expression if type is a constant or name
+
     """
 
     CONSTANT, NAME, COMBINATION = range(3)
@@ -189,6 +190,7 @@ class Environment(object):
         """Evaluate expression.
 
         Expression is represented by a Expression object.
+
         """
 
         # Save tail recursion allowed state in object and change it
@@ -223,6 +225,7 @@ class Environment(object):
         """Apply special form 'define' to operands.
 
         Operands are represented as a list of Expression objects.
+
         """
 
         if operands[0].is_combination():
@@ -240,6 +243,7 @@ class Environment(object):
         """Apply special form 'cond' to operands.
 
         Operands are represented as a list of Expression objects.
+
         """
 
         for case in operands:
@@ -249,23 +253,27 @@ class Environment(object):
                 for expr in case.fields[1:-1]:
                     self.eval(expr, tail_allowed=False)
                 return self.eval(case.fields[-1])
-        return False
+        return None
 
     def _if(self, operands):
         """Apply special form 'if' to operands.
 
         Operands are represented as a list of Expression objects.
+
         """
 
-        return self._cond([Expression([operands[0], operands[1]],
-                                      Expression.COMBINATION),
-                           Expression([Expression('else'), operands[2]],
-                                      Expression.COMBINATION)])
+        expr = [Expression([operands[0], operands[1]],
+                           Expression.COMBINATION)]
+        if len(operands) > 2:
+            expr.append(Expression([Expression('else'), operands[2]],
+                                   Expression.COMBINATION))
+        return self._cond(expr)
 
     def _and(self, operands):
         """Apply special form 'and' to operands.
 
         Operands are represented as a list of Expression objects.
+
         """
 
         for operand in operands:
@@ -278,6 +286,7 @@ class Environment(object):
         """Apply special form 'or' to operands.
 
         Operands are represented as a list of Expression objects.
+
         """
 
         for operand in operands:
