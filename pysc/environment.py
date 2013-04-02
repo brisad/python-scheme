@@ -3,9 +3,10 @@ import time
 import operator
 
 
-class TailRecursion(Exception):
-    def __init__(self, next_args):
-        self.next_args = next_args
+class TailCall(Exception):
+    def __init__(self, expr, namespace):
+        self.expr = expr
+        self.namespace = namespace
 
 
 class SymbolError(Exception):
@@ -105,19 +106,15 @@ class Procedure(object):
         self.function = function
         self.parameters = parameters
 
-    def apply(self, env, args):
+    def apply(self, env, args, eliminate_tail_call=False):
         proc_env = Environment(namespace=dict(env.namespace), creator=self)
-        while True:
-            proc_env.namespace.update(zip(self.parameters, args))
-            for f in self.function[:-1]:
-                proc_env.eval(f, tail_allowed=False)
-            try:
-                result = proc_env.eval(self.function[-1], tail_allowed=True)
-            except TailRecursion as tr:
-                args = tr.next_args
-            else:
-                break
-
+        proc_env.namespace.update(zip(self.parameters, args))
+        for f in self.function[:-1]:
+            proc_env.eval(f)
+        if eliminate_tail_call:
+            raise TailCall(self.function[-1], proc_env.namespace)
+        else:
+            result = proc_env.eval(self.function[-1])
         return result
 
     def __eq__(self, other):
@@ -150,7 +147,7 @@ class BuiltinProcedure(object):
             stream = None
         self.stream = stream
 
-    def apply(self, env, args):
+    def apply(self, env, args, eliminate_tail_call=False):
         if self.needs_stream:
             return self.function(args, self.stream)
         else:
@@ -185,23 +182,29 @@ class Environment(object):
         self.namespace = namespace
         self.special_forms = special_forms
         self.creator = creator
-        self.tail_allowed = False
 
-    def eval(self, expr, calldepth=0, tail_allowed=None):
+    def eval(self, expr):
         """Evaluate expression.
 
-        Expression is represented by a Expression object.
+        Expression is represented by an Expression object.
 
         """
 
-        # Save tail recursion allowed state in object and change it
-        # only if is is explicitly passed in with the call.  By
-        # remembering its state, it is unneccessary to pass it on with
-        # every call to eval in special forms, which will keep the
-        # code more readable.
-        if tail_allowed is not None:
-            self.tail_allowed = tail_allowed
+        saved_namespace = self.namespace
+        while True:
+            try:
+                result = self._evaluate(expr)
+            except TailCall as tc:
+                expr = tc.expr
+                self.namespace = tc.namespace
+            else:
+                break
 
+        self.namespace = saved_namespace
+
+        return result
+
+    def _evaluate(self, expr):
         if expr.is_name():
             try:
                 result = self.namespace[expr.scalar]
@@ -215,12 +218,10 @@ class Environment(object):
             return f(expr.fields[1:])
         else:
             # 1. Evaluate the subexpressions of the combination
-            l = [self.eval(subexpr, calldepth+1) for subexpr in expr.fields]
+            l = [self.eval(subexpr) for subexpr in expr.fields]
             # 2. Apply the operator to the operands
             f = l[0]
-            if self.tail_allowed and self.creator is f and calldepth == 0:
-                raise TailRecursion(l[1:])
-            return f.apply(self, l[1:])
+            return f.apply(self, l[1:], eliminate_tail_call=True)
 
     def _define(self, operands):
         """Apply special form 'define' to operands.
@@ -252,7 +253,7 @@ class Environment(object):
                     case.fields[0].scalar == 'else' or \
                     self.eval(case.fields[0]):
                 for expr in case.fields[1:-1]:
-                    self.eval(expr, tail_allowed=False)
+                    self.eval(expr)
                 return self.eval(case.fields[-1])
         return None
 
