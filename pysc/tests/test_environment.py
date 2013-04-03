@@ -216,6 +216,8 @@ class test_special_forms(TestCase):
 
     def setUp(self):
         self.env = Environment()
+        # Disable tail call elimination
+        self.env._special_form_tail_call = False
         self.set_namespace({})
 
     def set_namespace(self, namespace):

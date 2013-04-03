@@ -3,8 +3,8 @@
 >   (if (= x 0)
 >       y
 >       (t (- x 1) (+ y 1))))
-> (t 200 0)
-200
+> (t 1000 0)
+1000
 
 ;; Test tail call elimination for two different procedures
 > (define (a x)
@@ -13,7 +13,7 @@
 >       (b (- x 1))))
 > (define (b x)
 >   (a x))
-> (a 100)
+> (a 1000)
 0
 
 ;; Check that namespaces are correctly preserved when tail call

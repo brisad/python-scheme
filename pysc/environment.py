@@ -182,6 +182,7 @@ class Environment(object):
         self.namespace = namespace
         self.special_forms = special_forms
         self.creator = creator
+        self._special_form_tail_call = True
 
     def eval(self, expr):
         """Evaluate expression.
@@ -201,7 +202,6 @@ class Environment(object):
                 break
 
         self.namespace = saved_namespace
-
         return result
 
     def _evaluate(self, expr):
@@ -254,7 +254,10 @@ class Environment(object):
                     self.eval(case.fields[0]):
                 for expr in case.fields[1:-1]:
                     self.eval(expr)
-                return self.eval(case.fields[-1])
+                if self._special_form_tail_call:
+                    raise TailCall(case.fields[-1], self.namespace)
+                else:
+                    return self.eval(case.fields[-1])
         return None
 
     def _if(self, operands):
